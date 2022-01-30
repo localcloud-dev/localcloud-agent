@@ -1,4 +1,4 @@
-# Deployed.cc Server
+# Deployed.cc Client
 
 Run serverless containers on virtually any cloud or in other words, deploy autoscaled web projects on your own cloud servers directly from Git.
 
