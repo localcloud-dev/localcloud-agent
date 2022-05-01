@@ -8,17 +8,8 @@ dotenv.config();
 const os = require('os');
 const home_dir = `${os.homedir()}/`;
 
-const superagent = require('superagent');
-const execSync = require('child_process').execSync;
 const simpleGit = require('simple-git');
 
-const Parse = require('parse/node');
-const ParseAppId = process.env.PARSE_APP_ID;
-Parse.initialize(ParseAppId);
-Parse.serverURL = process.env.PARSE_SERVER_URL;
-
-const Auth = require("./auth");
-const auth = new Auth();
 
 module.exports = function (app) {
 
@@ -43,15 +34,6 @@ module.exports = function (app) {
             }
             execSync(`rm -rf ` + home_dir + "temp_git");
 
-            //Update Project status
-            try {
-                const put_res = await superagent.put(Parse.serverURL + '/classes/Project/' + req.body.project_id).send({ "status": project_status }).set({ 'X-Parse-Application-Id': ParseAppId, 'X-Parse-Session-Token': req.headers['authorization'] }).set('accept', 'json');
-                if (put_res.statusCode != 200) {
-                    console.log('Invalid token, cannot update project with id: ');
-                }
-            } catch (err) {
-                console.log('Invalid token, cannot update project with id: ');
-            }
         });
     });
 

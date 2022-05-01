@@ -4,10 +4,6 @@
 */
 const superagent = require('superagent');
 
-const Parse = require('parse/node');
-const ParseAppId = process.env.PARSE_APP_ID;
-Parse.initialize(ParseAppId);
-Parse.serverURL = process.env.PARSE_SERVER_URL;
 
 class Auth {
     async handleAllReqs(req, res) {

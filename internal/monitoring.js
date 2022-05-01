@@ -6,7 +6,7 @@ const osutils = require('os-utils');
 const disk = require('diskusage');
 
 //Update stats from containers
-global.stats = {};
+var stats = {};
 stats.cluster = {};
 stats.projects = {};
 
