@@ -8,12 +8,10 @@ const polka = require('polka');
 const app = polka();
 
 const { json } = require('body-parser');
-const serveStatic = require('serve-static');
 const cors = require('cors');
 
 app.use(cors());
 app.use(json());
-app.use(serveStatic('certs'));
 
 const winston = require('winston');
 const logger = winston.createLogger({
@@ -29,54 +27,49 @@ const logger = winston.createLogger({
     new winston.transports.File({ filename: 'info.log' }),
   ],
 });
+global.logger = logger;
+
 //Log examples:
 //logger.info('Some info');
 //logger.error('Some error');
 
 //Load config
 const fs = require('fs');
-global.cluster_config = {};
+global.service_node_config = {};
 try {
-  global.cluster_config = JSON.parse(fs.readFileSync(home_dir + '.deployed/config.json', 'utf8'));
+  global.service_node_config = JSON.parse(fs.readFileSync(home_dir + '.deployed-config.json', 'utf8'));
 } catch (e) {
-  console.log('Cannot load public key:', e.stack);
+  global.logger.info('No config file ~/.deployed-config.json has been found');
 }
+
+global.service_node_config.port = process.env.PORT || 4004;
+global.service_node_config.domain = process.env.SERVICE_NODE_DOMAIN;
 
 //Projects to deploy
 global.projects_to_deploy = [];
 global.projects = [];
 
 try {
-  global.projects = JSON.parse(fs.readFileSync(home_dir + '.deployed/projects.json', 'utf8'));
+  global.projects = JSON.parse(fs.readFileSync(home_dir + '.deployed-projects.json', 'utf8'));
   console.log(projects);
 } catch (e) {
-  console.log('No projects.json file yet');
+  global.logger.info('No projects file ~/.deployed-projects.json has been found');
 }
 
-//We add new domains only if there no projects to deploy in the query
-global.domains_to_add = [];
-
 //Create routes
-require("./routes/git")(app);
-require("./routes/stats")(app);
+require("./routes/deployment")(app);
 
-//Start deployment queue
-//const deployment_int = require("./internal/deployment_int");
-//setInterval(deployment_int.deployNext, process.env.CHECK_DEPLOYMENT_QUEUE_INTERVAL);
-require("./internal/job_manager")(logger);
+//Load other modules
+const proxy = require("./routes/proxy");
+proxy.proxy_reload();
 
-//Start monitoring queue
-const monitoring = require("./internal/monitoring");
-const { notStrictEqual } = require('assert');
-setInterval(monitoring.getStats, process.env.CHECK_DEPLOYMENT_QUEUE_INTERVAL);
-
-//Check if deployed-client works
+//Check if service-node works
 app.get('/hey', (req, res) => {
   res.statusCode = 200;
-  res.end(JSON.stringify({ message: `I'm nice, guys!` }));
+  res.end(JSON.stringify({ message: `I'm fine!` }));
 });
 
-app.listen(process.env.PORT, err => {
+app.listen(global.service_node_config.port, err => {
   if (err) throw err;
-  console.log(`> Deployed.cc Client Agent is running on port ${process.env.PORT}`);
+  global.logger.info(`Deployed.cc service node is running on port ${global.service_node_config.port}`);
 });

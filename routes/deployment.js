@@ -1,11 +1,9 @@
 /*
     deployment.js
-    Methods for deploying projects
+    Methods for project deployment
 */
 const dotenv = require('dotenv');
 dotenv.config();
-
-const deployment_int = require("../internal/deployment_int");
 
 module.exports = function (app) {
 
