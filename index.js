@@ -42,26 +42,29 @@ try {
   global.logger.info('No config file ~/.deployed-config.json has been found');
 }
 
-global.service_node_config.port = process.env.PORT || 4004;
+global.service_node_config.port = process.env.PORT || 5005;
 global.service_node_config.domain = process.env.SERVICE_NODE_DOMAIN;
 
 //Projects to deploy
-global.projects_to_deploy = [];
-global.projects = [];
-
 try {
   global.projects = JSON.parse(fs.readFileSync(home_dir + '.deployed-projects.json', 'utf8'));
   console.log(projects);
 } catch (e) {
   global.logger.info('No projects file ~/.deployed-projects.json has been found');
+  global.projects = [];
 }
 
 //Create routes
-require("./routes/deployment")(app);
+const deployment = require("./routes/deployment");
+setInterval(deployment.check_deployment_query, 1000);
 
 //Load other modules
 const proxy = require("./routes/proxy");
 proxy.proxy_reload();
+
+//Routes
+require("./routes/service")(app);
+require("./routes/deploy")(app);
 
 //Check if service-node works
 app.get('/hey', (req, res) => {

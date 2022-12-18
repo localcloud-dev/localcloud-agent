@@ -18,14 +18,17 @@ sudo ufw --force enable
 DEBIAN_FRONTEND=noninteractive  sudo apt-get update
 DEBIAN_FRONTEND=noninteractive  sudo apt-get -y install podman
 
+echo "unqualified-search-registries = [\"docker.io\"]" >> $HOME/.config/containers/registries.conf 
+
 #Install npm & node.js
-DEBIAN_FRONTEND=noninteractive  sudo apt-get -y install npm
+curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash - 
+DEBIAN_FRONTEND=noninteractive  sudo apt-get install -y nodejs
 
 #Install PM2
 npm install pm2@latest -g
 
 #Generate SSH keys
-ssh-keygen
+ssh-keygen -t rsa -N "" -f ~/.ssh/id_rsa
 
 ssh-keyscan bitbucket.org >> ~/.ssh/known_hosts
 ssh-keyscan github.com >> ~/.ssh/known_hosts
@@ -46,4 +49,8 @@ pm2 startup
 pm2 save
 
 #Reboot (optional)
+
+echo "Deployed.cc Node Service is installed\n"
+echo "Run \"deploy\" in your Terminal to deploy the first project\n"
+
 #reboot
