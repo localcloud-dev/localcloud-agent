@@ -12,6 +12,8 @@ sudo ufw allow 80
 sudo ufw allow 443
 sudo ufw allow 22
 sudo ufw allow 9418
+sudo ufw allow 4242
+sudo ufw allow from 192.168.202.2 #IP address of the first local machine inside VPN (based on Nebula)
 sudo ufw --force enable
 
 #Install Podman
@@ -47,6 +49,34 @@ npm install
 SERVICE_NODE_DOMAIN=$1  pm2 start index.js --name service-node 
 pm2 startup
 pm2 save
+
+#Install Nebula
+cd $HOME
+wget https://github.com/slackhq/nebula/releases/download/v1.6.1/nebula-linux-amd64.tar.gz 
+tar -xzf nebula-linux-amd64.tar.gz
+chmod +x nebula
+chmod +x nebula-cert
+
+./nebula-cert ca -name "Myorganization, Inc" -duration 34531h
+
+./nebula-cert sign -name "lighthouse_1" -ip "192.168.202.1/24"
+./nebula-cert sign -name "local_machine_1" -ip "192.168.202.2/24" -groups "devs"
+
+server_ip="$(curl ifconfig.me)"
+
+cp service-node/public/provision/nebula_lighthouse_config.yaml lighthouse_config.yaml
+sed -i -e "s/{{lighthouse_ip}}/$server_ip/g" lighthouse_config.yaml
+
+cp service-node/public/provision/nebula_node_config.yaml node_config.yaml
+sed -i -e "s/{{lighthouse_ip}}/$server_ip/g" node_config.yaml
+
+mkdir /etc/nebula
+cp lighthouse_config.yaml /etc/nebula/config.yaml
+cp ca.crt /etc/nebula/ca.crt
+cp lighthouse_1.crt /etc/nebula/host.crt
+cp lighthouse_1.key /etc/nebula/host.key
+
+./nebula -config /etc/nebula/config.yaml &
 
 #Reboot (optional)
 
