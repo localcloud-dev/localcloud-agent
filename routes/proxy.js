@@ -22,7 +22,10 @@ function proxy_reload() {
 
     //Generate Caddyfile
     var caddy_file = `${service_node_config.domain} {
-    reverse_proxy * localhost:${service_node_config.port}
+    reverse_proxy /hey localhost:${service_node_config.port}
+    reverse_proxy /deploy/* localhost:${service_node_config.port}
+    reverse_proxy /setup_vpn/* localhost:${service_node_config.port}
+    reverse_proxy * abort
 }
 `;
 

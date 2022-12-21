@@ -40,6 +40,10 @@ try {
   global.service_node_config = JSON.parse(fs.readFileSync(home_dir + '.deployed-config.json', 'utf8'));
 } catch (e) {
   global.logger.info('No config file ~/.deployed-config.json has been found');
+
+  //Create a new config file
+  //Use env.PORT.BASE_PRIVATE_IP to generate private IPs for VPN nodes
+  global.service_node_config.vpn_nodes = [];
 }
 
 global.service_node_config.port = process.env.PORT || 5005;
@@ -65,6 +69,7 @@ proxy.proxy_reload();
 //Routes
 require("./routes/service")(app);
 require("./routes/deploy")(app);
+require("./routes/vpn")(app);
 
 //Check if service-node works
 app.get('/hey', (req, res) => {
