@@ -13,7 +13,6 @@ sudo ufw allow 443
 sudo ufw allow 22
 sudo ufw allow 9418
 sudo ufw allow 4242
-sudo ufw allow from 192.168.202.2 #IP address of the first local machine inside VPN (based on Nebula)
 sudo ufw --force enable
 
 #Install Podman
@@ -60,7 +59,7 @@ chmod +x nebula-cert
 ./nebula-cert ca -name "Myorganization, Inc" -duration 34531h
 
 ./nebula-cert sign -name "lighthouse_1" -ip "192.168.202.1/24"
-./nebula-cert sign -name "local_machine_1" -ip "192.168.202.2/24" -groups "devs"
+#./nebula-cert sign -name "local_machine_1" -ip "192.168.202.2/24" -groups "devs"
 
 server_ip="$(curl ifconfig.me)"
 

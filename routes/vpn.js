@@ -35,17 +35,17 @@ module.exports = function (app) {
     //Generate a new VPN private IP
     const private_ip_mask = `192.168.202.`;
     var random_id = randomNumber(1,254);
-    while (global.service_node_config.vpn_nodes.find(node => node.ip === `${private_ip_mask}${random_id}/24`) != undefined) {
+    while (global.service_node_config.vpn_nodes.find(node => node.ip === `${private_ip_mask}${random_id}`) != undefined) {
       random_id = randomNumber(1,254);
     }
 
     var new_vpn_node = {};
-    new_vpn_node.ip = `${private_ip_mask}${random_id}/24`;
+    new_vpn_node.ip = `${private_ip_mask}${random_id}`;
     new_vpn_node.name = name;
 
     global.logger.info(`Random private VPN IP: ${new_vpn_node.ip}`);
 
-    exec(`./nebula-cert sign -name \"${new_vpn_node.name}\" -ip \"${new_vpn_node.ip}\" -groups "devs"`,{
+    exec(`./nebula-cert sign -name \"${new_vpn_node.name}\" -ip \"${new_vpn_node.ip}\/24" -groups "devs" && sudo ufw allow from ${new_vpn_node.ip}`,{
       cwd: home_dir
   }, function (err, stdout, stderr) {
 
@@ -95,7 +95,7 @@ module.exports = function (app) {
       }
 
       res.statusCode = 201;
-      res.end(JSON.stringify({ "vpn_setup_archive_url": `http://localhost:5005/setup_vpn/${archive_uuid}` }));
+      res.end(JSON.stringify({ "vpn_setup_archive_url": `http://${global.service_node_config.domain}/setup_vpn/${archive_uuid}` }));
 
     });
 
