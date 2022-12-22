@@ -4,13 +4,16 @@
 */
 
 const storage = require("../utils/storage");
+const auth = require("../utils/auth");
 
 module.exports = function (app) {
 
-    app.post('/deploy/:api_key', function (req, res) {
-        if (req.params.api_key != "111") {
+    //Handles Webhooks from Git repository
+    //Now only Bitbucket repositories are supported
+    app.post('/deploy/:api_token', async function (req, res) {
+        if (await auth.validate_token(req.params.api_token) == false){
             res.statusCode = 401;
-            res.end(JSON.stringify({ error: "Invalid token. Check that a hook url you added to this git repository is correct." }));
+            res.end(JSON.stringify({ error: "Invalid api key" }));
             return;
         }
 

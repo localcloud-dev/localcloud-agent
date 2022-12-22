@@ -36,6 +36,7 @@ function check_deployment_query() {
                     const environment_name = environment.name;
                     environment.exposed_ports = [available_port];
 
+                    const prev_container_name = environment.image_name; //We should stop old container and remove image after we star a new container
                     const repository_name = `${name}-${environment_name}-${crypto.randomUUID()}`;
                     environment.image_name = repository_name;
 
@@ -75,14 +76,34 @@ function check_deployment_query() {
                                                 global.logger.info(`Image ${repository_name} has been built`);
                                                 global.logger.info(`Run the image ${repository_name}`);
 
-                                                exec(`podman run -p ${exposed_port}:${service_port} -d ${repository_name}`, {
+                                                global.logger.info(`podman run -p ${exposed_port}:${service_port} -d ${repository_name} --name ${repository_name}`);
+
+                                                exec(`podman run --name ${repository_name} -p ${exposed_port}:${service_port} -d ${repository_name}`, {
                                                     cwd: `${homedir}/${repository_name}`
                                                 }, function (err, stdout, stderr) {
                                                     if (err == undefined || err == null) {
-                                                        global.logger.info(`Container from the image ${repository_name} has been started`);
+                                                        global.logger.info(`Container ${repository_name} has been started`);
 
                                                         //Reload Proxy Server
                                                         proxy.proxy_reload();
+
+                                                        //Stop an old container and remove an old image
+                                                        if (prev_container_name != undefined){
+                                                            exec(`podman stop ${prev_container_name}`, function (err, stdout, stderr) {
+                                                                if (err == undefined || err == null) {
+                                                                    global.logger.error(`Container ${prev_container_name} has been stopped because not used anymore`);
+                                                                }else{
+                                                                    global.logger.error(`Cannot stop container ${prev_container_name}. Error: ${err}`);
+                                                                }
+                                                                exec(`podman image rm ${prev_container_name} -f`, function (err, stdout, stderr) {
+                                                                    if (err == undefined || err == null) {
+                                                                        global.logger.error(`Image ${prev_container_name} has been removed because not used anymore`);
+                                                                    }else{
+                                                                        global.logger.error(`Cannot remove image ${prev_container_name}. Error: ${err}`);
+                                                                    }
+                                                                });
+                                                            });
+                                                        }
 
                                                     } else {
                                                         global.logger.error(`Cannot start the image ${repository_name}: ${err}`);

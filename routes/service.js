@@ -5,17 +5,19 @@
 
 const path = require('path');
 const storage = require("../utils/storage");
+const auth = require("../utils/auth");
 
 module.exports = function (app) {
 
     //Add a service and deploy from Bitbucket, GitHub or GitLab
     //Note: before calling this endpoint you should add public ssh key of a server where you want to deploy to Bitbucket, GitLab, GitHub access keys
     //and add webhook to your Bitbucket, GitLab, GitHub repository. Hints about how to do this are shown when you run "deploy"
-    app.post('/service/:api_key', async function (req, res) {
+    app.post('/service', async function (req, res) {
 
-        if (req.params.api_key != '111') {
+        const api_token = await auth.validate_token(req.headers["api-token"]);
+        if (api_token == false){
             res.statusCode = 401;
-            res.end(JSON.stringify({ error: "Invalid api key" }));
+            res.end(JSON.stringify({ error: "Invalid api token" }));
             return;
         }
 
