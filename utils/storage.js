@@ -1,6 +1,6 @@
 const fs = require('fs');
 
-function save_projects(){
+function save_services(){
     var json = JSON.stringify(global.projects);
     fs.writeFile(require('os').homedir() + '/.deployed-projects.json', json, err => {
         if (err) {
@@ -18,5 +18,5 @@ function save_config(){
       });
 }
 
-module.exports = {save_projects, save_config}
+module.exports = {save_services, save_config}
 

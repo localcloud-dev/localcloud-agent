@@ -40,11 +40,11 @@ function check_deployment_query() {
                     const repository_name = `${name}-${environment_name}-${crypto.randomUUID()}`;
                     environment.image_name = repository_name;
 
-                    //Update saved projects
-                    storage.save_projects();
+                    //Update saved services
+                    storage.save_services();
 
                     const exposed_port = environment.exposed_ports[0];
-                    const service_port = environment.service_port;
+                    const service_port = environment.port;
 
                     //Clone the repository
                     global.logger.info(`Cloning the repository:`);
@@ -160,7 +160,7 @@ module.exports = {
                 var environment = service.environments.find(environment => environment.branch === updated_branch);
                 if (environment != undefined) {
                     environment.status = "to_deploy";
-                    storage.save_projects();
+                    storage.save_services();
                 }
             }
             res.statusCode = 200;

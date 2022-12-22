@@ -7,6 +7,8 @@ const path = require('path');
 const storage = require("../utils/storage");
 const auth = require("../utils/auth");
 
+const { nanoid } = require("nanoid");
+
 module.exports = function (app) {
 
     //Add a service and deploy from Bitbucket, GitHub or GitLab
@@ -15,60 +17,57 @@ module.exports = function (app) {
     app.post('/service', async function (req, res) {
 
         const api_token = await auth.validate_token(req.headers["api-token"]);
-        if (api_token == false){
+        if (api_token == false) {
             res.statusCode = 401;
             res.end(JSON.stringify({ error: "Invalid api token" }));
             return;
         }
 
         const git_url = req.body.git_url;
-        const branch = req.body.branch;
-        const domain = req.body.domain;
-        const service_port = req.body.port;
-
-        const repository_name = path.parse(git_url.substring(git_url.lastIndexOf('/') + 1)).name; 
+        const environments = req.body.environments;
+        const repository_name = path.parse(git_url.substring(git_url.lastIndexOf('/') + 1)).name;
 
         const bitbucket_base_url = "bitbucket.org";
         const index = git_url.indexOf(bitbucket_base_url);
 
-        const repository_workspace = git_url.substring(index + 1 + bitbucket_base_url.length, git_url.lastIndexOf('/')); 
+        const repository_workspace = git_url.substring(index + 1 + bitbucket_base_url.length, git_url.lastIndexOf('/'));
         const repository_full_name = `${repository_workspace}/${repository_name}`;
 
-        //Check if we have a project with this git url
+        //Check if we have a service with this git url
         //If we have the user should send PUT /service to update the project
-        let saved_project = global.projects.find(project => project.git_url === git_url);
-        if (saved_project == undefined){
-            var new_project = {};
-            new_project.name = repository_name;
-            new_project.full_name = repository_full_name;
-                
-                var environment = {};
-                environment.service_port = service_port;
+        let saved_service = global.projects.find(project => project.git_url === git_url);
+        if (saved_service == undefined) {
+            var new_service = {};
 
-                environment.branch = branch;
-                environment.name = branch;
-                environment.domain = domain;
+            new_service.id = nanoid(10);
+            while (global.projects.find(service => service.id === new_service.id)){
+                new_service.id = nanoid(10);
+            }
+
+            new_service.name = repository_name;
+            new_service.full_name = repository_full_name;
+
+            environments.forEach((environment, index) => {
                 environment.status = "to_deploy";
+            })
 
-                new_project.environments = [environment];
+            new_service.environments = environments;
+            new_service.git_url = git_url;
+            global.projects.push(new_service);
 
-                new_project.git_url = git_url;
-    
-                global.projects.push(new_project);
-    
-                storage.save_projects();
+            storage.save_services();
 
-                global.logger.info(`New project added:`);
-                global.logger.info(`${JSON.stringify(new_project)}`);
+            global.logger.info(`New project added:`);
+            global.logger.info(`${JSON.stringify(new_service)}`);
 
-                res.statusCode = 201;
-                res.end(JSON.stringify({}));
+            res.statusCode = 201;
+            res.end(JSON.stringify({}));
 
-        }else{
+        } else {
             global.logger.info(`Project with git url: ${git_url} already exists. Use PUT /service to update a project.`);
 
             res.statusCode = 409;
-            res.end(JSON.stringify({"msg":`Project with git url: ${git_url} already exists. Use PUT /service to update a project.`}));
+            res.end(JSON.stringify({ "msg": `Project with git url: ${git_url} already exists. Use PUT /service to update a project.` }));
         }
     });
 

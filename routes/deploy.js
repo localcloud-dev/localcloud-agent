@@ -35,7 +35,7 @@ module.exports = function (app) {
             var environment = service.environments.find(environment => environment.branch === updated_branch);
             if (environment != undefined) {
                 environment.status = "to_deploy";
-                storage.save_projects();
+                storage.save_services();
             }
         }
         res.statusCode = 200;

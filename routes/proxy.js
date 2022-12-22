@@ -29,12 +29,14 @@ function proxy_reload() {
 }
 `;
 
-    global.projects.forEach((project, index) => {
-        const environment = project.environments[0];
-        caddy_file += `${environment.domain} {
+    global.projects.forEach((service, index) => {
+        service.environments.forEach((environment, index) => {
+            caddy_file += `
+${environment.domain} {
     reverse_proxy * localhost:${environment.exposed_ports[0]}
 }
 `;
+        });
     });
 
     fs.writeFile(`${homedir}/Caddyfile`, caddy_file, err => {
