@@ -6,7 +6,6 @@
 const path = require('path');
 const storage = require("../utils/storage");
 const auth = require("../utils/auth");
-
 const { nanoid } = require("nanoid");
 
 module.exports = function (app) {
@@ -16,7 +15,7 @@ module.exports = function (app) {
     //and add webhook to your Bitbucket, GitLab, GitHub repository. Hints about how to do this are shown when you run "deploy"
     app.post('/service', async function (req, res) {
 
-        const api_token = await auth.validate_token();
+        const api_token = await auth.validate_token(req.headers);
         if (api_token == false) {
             res.statusCode = 401;
             res.end(JSON.stringify({ error: "Invalid api token" }));
@@ -69,6 +68,38 @@ module.exports = function (app) {
             res.statusCode = 409;
             res.end(JSON.stringify({ "msg": `Project with git url: ${git_url} already exists. Use PUT /service to update a project.` }));
         }
+    });
+
+    app.delete('/service/:service_id', async function (req, res) {
+
+        const service_id = req.params.service_id;
+
+        const api_token = await auth.validate_token(req.headers);
+        if (api_token == false) {
+            res.statusCode = 401;
+            res.end(JSON.stringify({ error: "Invalid api token" }));
+            return;
+        }
+
+        //We should check that there are no any environments in this service
+        //Now we can remove only a service without environments
+        let service = global.projects.find(service => service.id === service_id);
+        if (service != undefined) {
+            if (service.environments.length != 0){
+                res.statusCode = 403;
+                res.end(JSON.stringify({ "msg": `Cannot remove a service ${service_id} because it has environments. Remove all service's environments at first and then try again.` }));    
+                return;
+            }
+        }
+
+        let index = global.projects.find(service => service.id === service_id);
+        global.projects.splice(index, 1);
+        storage.save_services();
+
+        global.logger.info(`Service: ${service_id} has been removed`);
+        res.statusCode = 200;
+        res.end("");  
+        
     });
 
 }
