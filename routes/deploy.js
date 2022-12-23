@@ -11,7 +11,7 @@ module.exports = function (app) {
     //Handles Webhooks from Git repository
     //Now only Bitbucket repositories are supported
     app.post('/deploy/:api_token', async function (req, res) {
-        if (await auth.validate_token(req.params.api_token) == false){
+        if (await auth.validate_token(req.params) == false){
             res.statusCode = 401;
             res.end(JSON.stringify({ error: "Invalid api key" }));
             return;

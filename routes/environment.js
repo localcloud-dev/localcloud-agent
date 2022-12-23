@@ -10,7 +10,7 @@ module.exports = function (app) {
 
     app.post('/environment/:service_id', async function (req, res) {
 
-        const api_token = await auth.validate_token(req.headers["api-token"]);
+        const api_token = await auth.validate_token(req.headers);
         if (api_token == false) {
             res.statusCode = 401;
             res.end(JSON.stringify({ error: "Invalid api token" }));
@@ -48,5 +48,43 @@ module.exports = function (app) {
         }
 
     });
+
+    app.delete('/environment/:service_id/:environment_name', async function (req, res) {
+
+        const api_token = await auth.validate_token(req.headers);
+        if (api_token == false) {
+            res.statusCode = 401;
+            res.end(JSON.stringify({ error: "Invalid api token" }));
+            return;
+        }
+
+        const service_id = req.params.service_id;
+        const environment_name = req.params.environment_name;
+
+        let service = global.projects.find(service => service.id === service_id);
+        if (service != undefined) {
+
+            let environment = service.environments.find(environment => environment.name === environment_name);
+            if (environment != undefined) {
+                //We should just plan for removing here
+                environment.status = `to_remove`;
+                storage.save_services();
+                global.logger.info(`Environment: ${environment_name} in the service with id: ${service_id} has been planned for removing`);
+                res.statusCode = 200;
+                res.end("");  
+            }else{
+                global.logger.error(`The service with id: ${service_id} hasn't "${environment_name}" environment.`);
+                res.statusCode = 404;
+                res.end(JSON.stringify({ "msg": `Cannot find "${environment_name}" environment in a service with id: ${service_id}.` })); 
+            }
+
+        }else{
+            global.logger.error(`Cannot find a service with id: ${service_id}.`);
+            res.statusCode = 404;
+            res.end(JSON.stringify({ "msg": `Cannot find a service with id: ${service_id}.` }));        
+        }
+
+    });
+
 }
 

@@ -16,7 +16,7 @@ module.exports = function (app) {
     //and add webhook to your Bitbucket, GitLab, GitHub repository. Hints about how to do this are shown when you run "deploy"
     app.post('/service', async function (req, res) {
 
-        const api_token = await auth.validate_token(req.headers["api-token"]);
+        const api_token = await auth.validate_token();
         if (api_token == false) {
             res.statusCode = 401;
             res.end(JSON.stringify({ error: "Invalid api token" }));

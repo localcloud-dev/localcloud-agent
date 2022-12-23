@@ -1,6 +1,6 @@
 /*
     deployment.js
-    Methods for project deployment
+    Methods to deploy services
 */
 
 const exec = require('child_process').exec;
@@ -12,9 +12,23 @@ const portfinder = require('portfinder');
 
 function check_deployment_query() {
 
-    global.projects.forEach((project, index) => {
+    global.projects.forEach((service, index) => {
 
-        project.environments.forEach((environment, index) => {
+        //Remove all environments with status "removed"
+        var index = service.environments.findIndex(environment => environment.status === 'removed');
+        while (index !== -1) {
+            is_should_save = true;
+            service.environments.splice(index, 1);
+            index = service.environments.findIndex(environment => environment.status === 'removed');
+            //Save services when we get index === -1
+            if (index === -1){
+                storage.save_services();
+                //Reload Proxy Server
+                proxy.proxy_reload();
+            }
+        }
+
+        service.environments.forEach((environment, index) => {
 
             if (environment.status == "to_deploy") {
 
@@ -29,8 +43,8 @@ function check_deployment_query() {
 
                     environment.status = "deploying";
 
-                    const git_url = project.git_url;
-                    const name = project.name;
+                    const git_url = service.git_url;
+                    const name = service.name;
     
                     const branch = environment.branch;
                     const environment_name = environment.name;
@@ -126,46 +140,33 @@ function check_deployment_query() {
 
                 });
 
+            }else if (environment.status == "to_remove") {
+                environment.status = "removed";
+                //Remove a container and image for this environment
+                const container_name = environment.image_name;
+                exec(`podman stop ${container_name}`, function (err, stdout, stderr) {
+                    if (err == undefined || err == null) {
+                        global.logger.info(`Container ${container_name} has been stopped because not used anymore`);
+                    }else{
+                        global.logger.error(`Cannot stop container ${container_name}. Error: ${err}`);
+                    }
+                    exec(`podman image rm ${container_name} -f`, function (err, stdout, stderr) {
+                        if (err == undefined || err == null) {
+                            global.logger.info(`Image ${container_name} has been removed because not used anymore`);
+                        }else{
+                            global.logger.error(`Cannot remove image ${container_name}. Error: ${err}`);
+                        }
+
+                        //Mark that this environment is ready to be removed from the service
+                        //We "clean" lists with environments at the begging of each check_deployment_query call
+
+                    });
+                });
             }
         });
     });
 
 }
 
-module.exports = {
-    check_deployment_query, function(app) {
-
-        app.post('/deploy/:api_key', function (req, res) {
-            if (req.params.api_key != "111") {
-                res.statusCode = 401;
-                res.end(JSON.stringify({ error: "Invalid token. Check that a hook url you added to this git repository is correct." }));
-                return;
-            }
-
-            const repo_name = req.body.repository.name;
-            if (repo_name == undefined) {
-                res.statusCode = 403;
-                res.end("");
-                return;
-            }
-
-            const repo_full_name = req.body.repository.full_name;
-            const updated_branch = req.body.push.changes[0].new.name;
-
-            console.log(repo_name + " " + updated_branch);
-
-            //Update projects
-            let service = global.projects.find(service => service.full_name === repo_full_name);
-            if (service != undefined) {
-                var environment = service.environments.find(environment => environment.branch === updated_branch);
-                if (environment != undefined) {
-                    environment.status = "to_deploy";
-                    storage.save_services();
-                }
-            }
-            res.statusCode = 200;
-            res.end(JSON.stringify({}));
-        });
-    }
-}
+module.exports = {check_deployment_query}
 
