@@ -95,13 +95,13 @@ module.exports = function (app) {
       }
 
       res.statusCode = 201;
-      res.end(JSON.stringify({ "vpn_setup_archive_url": `http://${global.service_node_config.domain}/setup_vpn/${archive_uuid}` }));
+      res.end(JSON.stringify({ "vpn_setup_archive_url": `https://${global.service_node_config.domain}/join_vpn/${archive_uuid}` }));
 
     });
 
   });
 
-  app.get('/setup_vpn/:archive_uuid', async function (req, res) {
+  app.get('/join_vpn/:archive_uuid', async function (req, res) {
 
     const archive_uuid = req.params.archive_uuid;
     const download_file = `${home_dir}/deployed-cc-vpn-setup-${archive_uuid}.zip`;

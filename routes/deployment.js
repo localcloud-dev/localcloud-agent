@@ -10,6 +10,52 @@ const storage = require("../utils/storage");
 const proxy = require("./proxy");
 const portfinder = require('portfinder');
 
+function create_restart_query() {
+
+    //Get running containers from Podman
+    exec(`podman ps --format json`, {
+        cwd: homedir
+    }, function (err, stdout, stderr) {
+        if (err == undefined || err == null) {
+
+            //Parse response
+            const containers = JSON.parse(stdout);
+
+            global.projects.forEach((service, index) => {
+                service.environments.forEach((environment, index) => {
+                    if (environment.status == "deployed") {
+
+                        if (containers.find(container => container.Names[0] === environment.image_name) == undefined) {
+
+                            environment.status = "deploying";
+                            const image_name = environment.image_name;
+                            const exposed_port = environment.exposed_ports[0];
+                            const service_port = environment.port;
+
+                            global.logger.info(`Container ${image_name} not found. Restarting...`);
+
+                            exec(`podman start ${image_name}`, {
+                                cwd: `${homedir}/${image_name}`
+                            }, function (err, stdout, stderr) {
+                                if (err == undefined || err == null) {
+
+                                    global.logger.info(`Container ${image_name} has been restarted`);
+                                    environment.status = "deployed";
+                                    storage.save_services();
+                                }else{
+                                    global.logger.error(`Container ${image_name} cannot be restarted. Error: ${err}`);
+                                }
+                            });
+                        }
+
+                    }
+                });
+            });
+
+        }
+    });
+}
+
 function check_deployment_query() {
 
     global.projects.forEach((service, index) => {
@@ -54,9 +100,6 @@ function check_deployment_query() {
                     const repository_name = `${name}-${environment_name}-${crypto.randomUUID()}`;
                     environment.image_name = repository_name;
 
-                    //Update saved services
-                    storage.save_services();
-
                     const exposed_port = environment.exposed_ports[0];
                     const service_port = environment.port;
 
@@ -100,6 +143,8 @@ function check_deployment_query() {
 
                                                         //Reload Proxy Server
                                                         proxy.proxy_reload();
+                                                        environment.status = "deployed";
+                                                        storage.save_services();
 
                                                         //Stop an old container and remove an old image
                                                         if (prev_container_name != undefined){
@@ -168,5 +213,5 @@ function check_deployment_query() {
 
 }
 
-module.exports = {check_deployment_query}
+module.exports = {check_deployment_query, create_restart_query}
 

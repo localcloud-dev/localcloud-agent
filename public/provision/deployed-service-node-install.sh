@@ -46,8 +46,6 @@ git clone https://coded-sh@bitbucket.org/coded-sh/service-node.git
 cd service-node
 npm install
 SERVICE_NODE_DOMAIN=$1  pm2 start index.js --name service-node 
-pm2 startup
-pm2 save
 
 #Install Nebula
 cd $HOME
@@ -75,7 +73,11 @@ cp ca.crt /etc/nebula/ca.crt
 cp lighthouse_1.crt /etc/nebula/host.crt
 cp lighthouse_1.key /etc/nebula/host.key
 
-./nebula -config /etc/nebula/config.yaml &
+pm2 start ./nebula --name nebula -- -config /etc/nebula/config.yaml
+
+#Save PM2 to launch service-node and nebula after rebooting
+pm2 startup
+pm2 save
 
 #Reboot (optional)
 
