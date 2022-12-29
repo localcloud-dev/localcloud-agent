@@ -29,8 +29,6 @@ function create_restart_query() {
 
                             environment.status = "deploying";
                             const image_name = environment.image_name;
-                            const exposed_port = environment.exposed_ports[0];
-                            const service_port = environment.port;
 
                             global.logger.info(`Container ${image_name} not found. Restarting...`);
 
@@ -150,13 +148,13 @@ function check_deployment_query() {
                                                         if (prev_container_name != undefined){
                                                             exec(`podman stop ${prev_container_name}`, function (err, stdout, stderr) {
                                                                 if (err == undefined || err == null) {
-                                                                    global.logger.error(`Container ${prev_container_name} has been stopped because not used anymore`);
+                                                                    global.logger.info(`Container ${prev_container_name} has been stopped because not used anymore`);
                                                                 }else{
                                                                     global.logger.error(`Cannot stop container ${prev_container_name}. Error: ${err}`);
                                                                 }
                                                                 exec(`podman image rm ${prev_container_name} -f`, function (err, stdout, stderr) {
                                                                     if (err == undefined || err == null) {
-                                                                        global.logger.error(`Image ${prev_container_name} has been removed because not used anymore`);
+                                                                        global.logger.info(`Image ${prev_container_name} has been removed because not used anymore`);
                                                                     }else{
                                                                         global.logger.error(`Cannot remove image ${prev_container_name}. Error: ${err}`);
                                                                     }

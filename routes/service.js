@@ -15,11 +15,13 @@ module.exports = function (app) {
     //and add webhook to your Bitbucket, GitLab, GitHub repository. Hints about how to do this are shown when you run "deploy"
     app.post('/service', async function (req, res) {
 
-        const api_token = await auth.validate_token(req.headers);
-        if (api_token == false) {
-            res.statusCode = 401;
-            res.end(JSON.stringify({ error: "Invalid api token" }));
-            return;
+        if (global.service_node_config.is_api_key_used == true){
+            const api_token = await auth.validate_token(req.headers);
+            if (api_token == false) {
+                res.statusCode = 401;
+                res.end(JSON.stringify({ error: "Invalid api token" }));
+                return;
+            }
         }
 
         const git_url = req.body.git_url;
@@ -74,11 +76,13 @@ module.exports = function (app) {
 
         const service_id = req.params.service_id;
 
-        const api_token = await auth.validate_token(req.headers);
-        if (api_token == false) {
-            res.statusCode = 401;
-            res.end(JSON.stringify({ error: "Invalid api token" }));
-            return;
+        if (global.service_node_config.is_api_key_used == true){
+            const api_token = await auth.validate_token(req.headers);
+            if (api_token == false) {
+                res.statusCode = 401;
+                res.end(JSON.stringify({ error: "Invalid api token" }));
+                return;
+            }
         }
 
         //We should check that there are no any environments in this service

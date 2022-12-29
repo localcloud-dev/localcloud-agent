@@ -24,6 +24,7 @@ echo "unqualified-search-registries = [\"docker.io\"]" >> $HOME/.config/containe
 #Install npm & node.js
 curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash - 
 DEBIAN_FRONTEND=noninteractive  sudo apt-get install -y nodejs
+npm install -g npm@9.2.0
 
 #Install PM2
 npm install pm2@latest -g
@@ -79,9 +80,16 @@ pm2 start ./nebula --name nebula -- -config /etc/nebula/config.yaml
 pm2 startup
 pm2 save
 
+#Generate VPN certificates for the first local machine with full access
+#    .---------- constant part!
+#    vvvv vvvv-- the code from above
+GREEN='\033[0;32m'
+NC='\033[0m' # No Color
+
+certificate_output=$(curl -d '{"name":"local_machine"}' -H "Content-Type: application/json" -X POST http://localhost:5005/vpn_node)
+
+echo -e "${GREEN}+---------------------------------------+${NC}"
+echo "$certificate_output" | tr -d '"'
+
 #Reboot (optional)
-
-echo "Deployed.cc Node Service is installed\n"
-echo "Run \"deploy\" in your Terminal to deploy the first project\n"
-
 #reboot

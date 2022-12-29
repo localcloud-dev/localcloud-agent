@@ -49,11 +49,13 @@ try {
   //Create a new config file
   //Use env.PORT.BASE_PRIVATE_IP to generate private IPs for VPN nodes
   global.service_node_config.vpn_nodes = [];
-
-  //Generate API Token
-  generate_api_token();
+  global.service_node_config.hashed_tokens = [];
 }
 
+//Generate API Token
+generate_api_token();
+
+global.service_node_config.is_api_key_used = false; // We don't use API Tokens in the first version except POST /deploy/:api_token that is used to notify a service node about new git push
 global.service_node_config.port = process.env.PORT || 5005;
 global.service_node_config.domain = process.env.SERVICE_NODE_DOMAIN; // We set this in deployed-service-node-install.sh script
 
@@ -96,7 +98,7 @@ async function generate_api_token() {
 
   //Lets create a new API KEY
   global.service_node_config.api_token = crypto.randomUUID(); //ToDo: We should hide api_token after a user gets it
-  global.service_node_config.hashed_token = await bcrypt.hash(global.service_node_config.api_token, 10);
+  global.service_node_config.hashed_tokens.push(await bcrypt.hash(global.service_node_config.api_token, 10));
 
   global.logger.info('New API Token is generated:');
   global.logger.info(`${global.service_node_config.api_token}`);

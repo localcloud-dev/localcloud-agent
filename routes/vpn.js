@@ -34,9 +34,11 @@ module.exports = function (app) {
 
     //Generate a new VPN private IP
     const private_ip_mask = `192.168.202.`;
-    var random_id = randomNumber(1,254);
+    const IP_mask_min = 2;
+    const IP_mask_max = 254;
+    var random_id = randomNumber(IP_mask_min,IP_mask_max);
     while (global.service_node_config.vpn_nodes.find(node => node.ip === `${private_ip_mask}${random_id}`) != undefined) {
-      random_id = randomNumber(1,254);
+      random_id = randomNumber(IP_mask_min,IP_mask_max);
     }
 
     var new_vpn_node = {};
@@ -58,7 +60,7 @@ module.exports = function (app) {
       global.service_node_config.vpn_nodes.push(new_vpn_node);
       storage.save_config();
 
-      global.logger.info(`A certificate for a new node are created.`);
+      global.logger.info(`A certificate for a new node is created.`);
 
       //After we generate certificates for a new node move them to folder $HOME/$archive_uuid
       //We need 4 files: ca.crt, config.yaml, host.key, host.crt
@@ -95,7 +97,34 @@ module.exports = function (app) {
       }
 
       res.statusCode = 201;
-      res.end(JSON.stringify({ "vpn_setup_archive_url": `https://${global.service_node_config.domain}/join_vpn/${archive_uuid}` }));
+      res.end(JSON.stringify(`
+
+Service Node Agent has been installed.
+
+To deploy a first project you should:
+
+- install Deploy CLI on your local machine (on your laptop, iMac, Desktop computer etc.). Run in Terminal/Console (NPM should be installed on your system):
+      
+    npm install -g deployed
+
+- check that Deployed CLI is installed:
+
+    deploy -v
+
+Note: If you see a message like 'command not found: deploy' try to install Deployed CLI with sudo: 'sudo npm install -g deployed' 
+      
+- connect your local machine to a virtual private network (this server is already in this network). Run in Terminal/Console on your local machine:
+
+    deploy -j https://${global.service_node_config.domain}/join_vpn/${archive_uuid}
+      
+If everything goes well you'll see menu with 2 items:
+
+    - Add service
+    - Manage services
+      
+Select Add service and follow instructions to deploy your first project.
+
+`));
 
     });
 
