@@ -15,7 +15,7 @@ module.exports = function (app) {
     //and add webhook to your Bitbucket, GitLab, GitHub repository. Hints about how to do this are shown when you run "deploy"
     app.post('/service', async function (req, res) {
 
-        if (global.service_node_config.is_api_key_used == true){
+        if (global.service_node_config.is_api_key_used == true) {
             const api_token = await auth.validate_token(req.headers);
             if (api_token == false) {
                 res.statusCode = 401;
@@ -41,7 +41,7 @@ module.exports = function (app) {
             var new_service = {};
 
             new_service.id = nanoid(10);
-            while (global.projects.find(service => service.id === new_service.id)){
+            while (global.projects.find(service => service.id === new_service.id)) {
                 new_service.id = nanoid(10);
             }
 
@@ -72,11 +72,58 @@ module.exports = function (app) {
         }
     });
 
+    app.get('/service', async function (req, res) {
+
+        if (global.service_node_config.is_api_key_used == true) {
+            const api_token = await auth.validate_token(req.headers);
+            if (api_token == false) {
+                res.statusCode = 401;
+                res.end(JSON.stringify({ error: "Invalid api token" }));
+                return;
+            }
+        }
+
+        res.writeHead(200, {
+            'Content-Type': 'application/json'
+        });
+        res.end(JSON.stringify(global.projects));
+
+    });
+
+
+    app.get('/service/:service_id/environment', async function (req, res) {
+
+        if (global.service_node_config.is_api_key_used == true) {
+            const api_token = await auth.validate_token(req.headers);
+            if (api_token == false) {
+                res.statusCode = 401;
+                res.end(JSON.stringify({ error: "Invalid api token" }));
+                return;
+            }
+        }
+
+        const service_id = req.params.service_id;
+
+        let service = global.projects.find(service => service.id === service_id);
+        if (service != undefined) {
+
+            res.writeHead(200, {
+                'Content-Type': 'application/json'
+            });
+            res.end(JSON.stringify(service.environments));
+
+        } else {
+            res.statusCode = 403;
+            res.end(JSON.stringify({ msg: "Service not found" }));
+        }
+
+    });
+
     app.delete('/service/:service_id', async function (req, res) {
 
         const service_id = req.params.service_id;
 
-        if (global.service_node_config.is_api_key_used == true){
+        if (global.service_node_config.is_api_key_used == true) {
             const api_token = await auth.validate_token(req.headers);
             if (api_token == false) {
                 res.statusCode = 401;
@@ -89,9 +136,9 @@ module.exports = function (app) {
         //Now we can remove only a service without environments
         let service = global.projects.find(service => service.id === service_id);
         if (service != undefined) {
-            if (service.environments.length != 0){
+            if (service.environments.length != 0) {
                 res.statusCode = 403;
-                res.end(JSON.stringify({ "msg": `Cannot remove a service ${service_id} because it has environments. Remove all service's environments at first and then try again.` }));    
+                res.end(JSON.stringify({ "msg": `Cannot remove a service ${service_id} because it has environments. Remove all service's environments at first and then try again.` }));
                 return;
             }
         }
@@ -102,8 +149,8 @@ module.exports = function (app) {
 
         global.logger.info(`Service: ${service_id} has been removed`);
         res.statusCode = 200;
-        res.end("");  
-        
+        res.end("");
+
     });
 
 }
