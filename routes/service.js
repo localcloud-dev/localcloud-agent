@@ -96,7 +96,7 @@ module.exports = function (app) {
         if (service != undefined) {
             if (service.environments.length != 0) {
                 res.statusCode = 403;
-                res.end(JSON.stringify({ "msg": `Cannot remove a service ${service_id} because it has environments. Remove all service's environments at first and then try again.` }));
+                res.end(JSON.stringify({ "msg": `Cannot remove a service ${service.name} because it has environments. Remove all service's environments at first and then try again.` }));
                 return;
             }
         }

@@ -21,6 +21,35 @@ const auth = require("./utils/auth");
 app.use(cors());
 app.use(json());
 
+// Log every request
+function log_request(req, res, next) {
+  logger.info(`~> Received ${req.method} on ${req.url}`);
+  next(); // move on
+}
+
+//Add Content-Type: application/json to all responses
+function add_response_headers(req, res, next) {
+  res.setHeader('Content-Type', 'application/json');
+  next(); // move on
+}
+
+async function authorize(req, res, next) {
+  if (global.service_node_config.is_api_key_used == true) {
+    const api_token = await auth.validate_token(req.headers);
+    if (api_token == false) {
+      res.statusCode = 401;
+      res.end(JSON.stringify({ error: "Invalid api token" }));
+    } else {
+      next();
+    }
+  }else{
+    next();
+  }
+}
+
+//Add middleware
+app.use(log_request, authorize, add_response_headers);
+
 const winston = require('winston');
 const logger = winston.createLogger({
   level: 'info',
@@ -90,39 +119,6 @@ app.get('/hey', (req, res) => {
   res.statusCode = 200;
   res.end(JSON.stringify({ message: `I'm fine!` }));
 });
-
-// Log every request
-function log_request(req, res, next) {
-  logger.info(`~> Received ${req.method} on ${req.url}`);
-  next(); // move on
-}
-
-//Add Content-Type: application/json to all responses
-function add_response_headers(req, res, next) {
-  res.setHeader('Content-Type', 'application/json');
-  next(); // move on
-}
-
-//Add Content-Type: application/json to all responses
-function add_response_headers(req, res, next) {
-  res.setHeader('Content-Type', 'application/json');
-  next(); // move on
-}
-
-async function authorize(req, res, next) {
-  if (global.service_node_config.is_api_key_used == true) {
-    const api_token = await auth.validate_token(req.headers);
-    if (api_token == false) {
-      res.statusCode = 401;
-      res.end(JSON.stringify({ error: "Invalid api token" }));
-    } else {
-      next();
-    }
-  }
-}
-
-//Add middleware
-app.use(log_request, authorize, add_response_headers);
 
 app.listen(global.service_node_config.port, err => {
   if (err) throw err;
