@@ -10,15 +10,6 @@ module.exports = function (app) {
 
     app.post('/environment/:service_id', async function (req, res) {
 
-        if (global.service_node_config.is_api_key_used == true){
-            const api_token = await auth.validate_token(req.headers);
-            if (api_token == false) {
-                res.statusCode = 401;
-                res.end(JSON.stringify({ error: "Invalid api token" }));
-                return;
-            }
-        }
-
         const service_id = req.params.service_id;
         var new_environment = req.body;
         let saved_service = global.projects.find(service => service.id === service_id);
@@ -52,15 +43,6 @@ module.exports = function (app) {
     });
 
     app.delete('/environment/:service_id/:environment_name', async function (req, res) {
-
-        if (global.service_node_config.is_api_key_used == true){
-            const api_token = await auth.validate_token(req.headers);
-            if (api_token == false) {
-                res.statusCode = 401;
-                res.end(JSON.stringify({ error: "Invalid api token" }));
-                return;
-            }
-        }
 
         const service_id = req.params.service_id;
         const environment_name = req.params.environment_name;

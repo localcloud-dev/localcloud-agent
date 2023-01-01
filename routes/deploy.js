@@ -50,9 +50,7 @@ module.exports = function (app) {
     app.get('/deploy/credentials', async function (req, res) {
         const ssh_pub_key = fs.readFileSync(home_dir + '/.ssh/id_rsa.pub', 'utf8');
         const credentials = {"ssh_pub_key":ssh_pub_key,"webhook_url":`https://${global.service_node_config.domain}/deploy/${global.service_node_config.api_token}`}
-        res.writeHead(200, {
-            'Content-Type': 'application/json'
-          });
+        res.statusCode = 200;
         res.end(JSON.stringify(credentials));
     });
 

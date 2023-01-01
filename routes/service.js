@@ -15,15 +15,6 @@ module.exports = function (app) {
     //and add webhook to your Bitbucket, GitLab, GitHub repository. Hints about how to do this are shown when you run "deploy"
     app.post('/service', async function (req, res) {
 
-        if (global.service_node_config.is_api_key_used == true) {
-            const api_token = await auth.validate_token(req.headers);
-            if (api_token == false) {
-                res.statusCode = 401;
-                res.end(JSON.stringify({ error: "Invalid api token" }));
-                return;
-            }
-        }
-
         const git_url = req.body.git_url;
         const environments = req.body.environments;
         const repository_name = path.parse(git_url.substring(git_url.lastIndexOf('/') + 1)).name;
@@ -73,43 +64,19 @@ module.exports = function (app) {
     });
 
     app.get('/service', async function (req, res) {
-
-        if (global.service_node_config.is_api_key_used == true) {
-            const api_token = await auth.validate_token(req.headers);
-            if (api_token == false) {
-                res.statusCode = 401;
-                res.end(JSON.stringify({ error: "Invalid api token" }));
-                return;
-            }
-        }
-
-        res.writeHead(200, {
-            'Content-Type': 'application/json'
-        });
+        res.statusCode = 200;
         res.end(JSON.stringify(global.projects));
-
     });
 
 
     app.get('/service/:service_id/environment', async function (req, res) {
-
-        if (global.service_node_config.is_api_key_used == true) {
-            const api_token = await auth.validate_token(req.headers);
-            if (api_token == false) {
-                res.statusCode = 401;
-                res.end(JSON.stringify({ error: "Invalid api token" }));
-                return;
-            }
-        }
 
         const service_id = req.params.service_id;
 
         let service = global.projects.find(service => service.id === service_id);
         if (service != undefined) {
 
-            res.writeHead(200, {
-                'Content-Type': 'application/json'
-            });
+            res.statusCode = 200;
             res.end(JSON.stringify(service.environments));
 
         } else {
@@ -122,15 +89,6 @@ module.exports = function (app) {
     app.delete('/service/:service_id', async function (req, res) {
 
         const service_id = req.params.service_id;
-
-        if (global.service_node_config.is_api_key_used == true) {
-            const api_token = await auth.validate_token(req.headers);
-            if (api_token == false) {
-                res.statusCode = 401;
-                res.end(JSON.stringify({ error: "Invalid api token" }));
-                return;
-            }
-        }
 
         //We should check that there are no any environments in this service
         //Now we can remove only a service without environments
