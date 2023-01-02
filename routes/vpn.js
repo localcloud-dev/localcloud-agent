@@ -105,7 +105,7 @@ To deploy a first project you should:
 
 - install Deploy CLI on your local machine (on your laptop, iMac, Desktop computer etc.). Run in Terminal/Console (NPM should be installed on your system):
       
-    npm install -g deployed
+    npm install -g https://github.com/deployed-cc/deployed-cli
 
 - check that Deployed CLI is installed:
 
