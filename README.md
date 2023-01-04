@@ -1,6 +1,12 @@
+**Note: The project is in active development - please, use it only for non-production environments until we release version 1.0**
+
 # Deployed.cc | Service Node
 
-Deployed.cc is the multi-cloud developer-friendly secure Platform as a service (PaaS)
+[Deployed.cc](https://deployed.cc) is the multi-cloud developer-friendly secure Platform as a service (PaaS).
+
+More info about the project: [deployed.cc](https://deployed.cc)
+Contact us if you have any questions: hey[a]deployed.cc
+**Don't forget to click on Star if you like the idea.**
 
 #### Multi-cloud and Cloud-agnostic
 
@@ -52,17 +58,20 @@ Deployed.cc uses Git to manage deployment that's why you don’t need to learn n
 
 #### What you need to deploy the first project:
 - A fresh (new) server (VPS, Public Cloud, Dedicated Server, etc) with public IP, SSH access, and Ubuntu 22.04. If you don't know where to get a cloud server try Hetzner, Scaleway, OVH or DigitalOcean. All these cloud providers are easier to use and much more cheap than AWS, GCP or Azure.
-- A custom domain and access to DNS records of this domain.
+- A custom domain and access to DNS records of this domain
+- Dockerfile in the project's root directory
 
 #### How to deploy a project with self-hosted Deployed.cc
 
 - Add A record to DNS with the public IP address of your server. For example, if a public IP of your server is 153.111.51.139 and your custom domain is project.com, you can add a wildcard A record *.test.project.com -> 153.111.51.139. This is just an example, you should update with your real IP address and domain name.
 - SSH into your server
-- Install the service-node agent on this server
+- Install the service-node agent on this server (replace "service_node_domain" with your domain, for the example in the step 1 it could be agent.test.project.com):
 ```
-curl https://raw.githubusercontent.com/deployed-cc/service-node/main/public/provision/deployed-service-node-install.sh | sh -s depl.depl-node-1.deployed.cc
+curl https://raw.githubusercontent.com/deployed-cc/service-node/main/public/provision/deployed-service-node-install.sh | sh -s service_node_domain
 ```
-- Wait until the service-node agent finishes the server provision and follow the steps in the final message. If everything goes well, you'll see something like in Terminal/Console:
+**service_node_domain** will be used for Bitbucket, Github and other webhooks, should be without http and https, for example: agent.test.project.com or deploy.domain.com, etc
+
+- Wait until the service-node agent finishes the server provision and follow the steps in the final message. If everything goes well, you'll see something like this:
 ```
 To deploy a first project you should:
 
@@ -86,7 +95,3 @@ To deploy a first project you should:
 
 - [Nebula](https://github.com/slackhq/nebula) - Nebula was created at Slack Technologies, Inc by Nate Brown and Ryan Huber, with contributions from Oliver Fross, Alan Lam, Wade Simmons, and Lining Wang. Nebula is licensed under the [MIT License](https://github.com/slackhq/nebula/blob/master/LICENSE).
 - [Caddy](https://github.com/caddyserver/caddy). Matthew Holt began developing Caddy in 2014 while studying computer science at Brigham Young University. Caddy is a registered trademark of Stack Holdings GmbH. Caddy is a project of [ZeroSSL](https://zerossl.com/), a Stack Holdings company. Caddy is licensed under the [Apache License 2.0](https://github.com/caddyserver/caddy/blob/master/LICENSE).
-
-### Contacts
-
-Feel free to contact us at hey[a]deployed.cc if you have any questions
