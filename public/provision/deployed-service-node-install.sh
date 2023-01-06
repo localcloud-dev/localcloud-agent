@@ -43,7 +43,7 @@ sudo apt update
 DEBIAN_FRONTEND=noninteractive sudo apt -y install caddy
 
 #Install Deployed.cc service-node
-git clone https://coded-sh@bitbucket.org/coded-sh/service-node.git
+git clone https://github.com/deployed-cc/service-node.git
 cd service-node
 npm install
 SERVICE_NODE_DOMAIN=$1  pm2 start index.js --name service-node 

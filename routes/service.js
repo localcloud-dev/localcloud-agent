@@ -10,19 +10,34 @@ const { nanoid } = require("nanoid");
 
 module.exports = function (app) {
 
-    //Add a service and deploy from Bitbucket, GitHub or GitLab
+    //Add a service and deploy from Bitbucket or GitHub
     //Note: before calling this endpoint you should add public ssh key of a server where you want to deploy to Bitbucket, GitLab, GitHub access keys
-    //and add webhook to your Bitbucket, GitLab, GitHub repository. Hints about how to do this are shown when you run "deploy"
+    //and add webhook to your Bitbucket, GitHub repository. Hints about how to do this are shown when you run "deploy"
     app.post('/service', async function (req, res) {
 
         const git_url = req.body.git_url;
         const environments = req.body.environments;
         const repository_name = path.parse(git_url.substring(git_url.lastIndexOf('/') + 1)).name;
 
-        const bitbucket_base_url = "bitbucket.org";
-        const index = git_url.indexOf(bitbucket_base_url);
+        var git_base_url = "bitbucket.org";
+        var index = git_url.indexOf(git_base_url);
 
-        const repository_workspace = git_url.substring(index + 1 + bitbucket_base_url.length, git_url.lastIndexOf('/'));
+        if (index == -1){
+            //Check if Git URL includes GitHub
+            git_base_url = "github.com";
+            index = git_url.indexOf(git_base_url);
+        }
+
+        if (index == -1){
+            //Deployed.cc doesn't support this Git server
+            global.logger.error(`Git repository on: ${git_url} isn't supported yet.`);
+
+            res.statusCode = 409;
+            res.end(JSON.stringify({ "msg": `Git repository on: ${git_url} isn't supported yet. Request support this git provider by contacting us.` }));
+
+        }
+
+        const repository_workspace = git_url.substring(index + 1 + git_base_url.length, git_url.lastIndexOf('/'));
         const repository_full_name = `${repository_workspace}/${repository_name}`;
 
         //Check if we have a service with this git url
