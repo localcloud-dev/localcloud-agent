@@ -21,7 +21,7 @@ function create_restart_query() {
             //Parse response
             const containers = JSON.parse(stdout);
 
-            global.projects.forEach((service, index) => {
+            global.services.forEach((service, index) => {
                 service.environments.forEach((environment, index) => {
                     if (environment.status == "deployed") {
 
@@ -56,7 +56,7 @@ function create_restart_query() {
 
 function check_deployment_query() {
 
-    global.projects.forEach((service, index) => {
+    global.services.forEach((service, index) => {
 
         //Remove all environments with status "removed"
         var index = service.environments.findIndex(environment => environment.status === 'removed');

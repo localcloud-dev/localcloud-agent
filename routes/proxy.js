@@ -8,12 +8,13 @@ const fs = require('fs');
 const homedir = require('os').homedir();
 
 function proxy_reload() {
-    global.logger.info(`Handling /proxy/reload/ ...`);
+    global.logger.info(`Updating proxy server configuration ...`);
 
-    //1. Load service-node configuration
-    //2. Load all deployed project configurations
-    //3. Generate a new proxy config file
-    //4. Reload a proxy server
+    //1. Fill service-node proxy configuration
+    //2. Fill all deployed service configurations
+    //3. Fill all tunnel configurations
+    //4. Generate a new proxy config file
+    //5. Reload a proxy server with a the new proxy server config file
 
     //Load service node config
     var service_node_config = {};
@@ -29,7 +30,8 @@ function proxy_reload() {
 }
 `;
 
-    global.projects.forEach((service, index) => {
+//Fill services
+    global.services.forEach((service, index) => {
         service.environments.forEach((environment, index) => {
             caddy_file += `
 ${environment.domain} {
@@ -37,6 +39,15 @@ ${environment.domain} {
 }
 `;
         });
+    });
+
+//Fill tunnels
+    global.tunnels.forEach((tunnel, index) => {
+        caddy_file += `
+${tunnel.domain} {
+    reverse_proxy * ${tunnel.vpn_ip}:${tunnel.port}
+}
+`;
     });
 
     fs.writeFile(`${homedir}/Caddyfile`, caddy_file, err => {

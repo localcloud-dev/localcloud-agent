@@ -1,10 +1,19 @@
 const fs = require('fs');
 
 function save_services(){
-    var json = JSON.stringify(global.projects);
-    fs.writeFile(require('os').homedir() + '/.deployed-projects.json', json, err => {
+    var json = JSON.stringify(global.services);
+    fs.writeFile(require('os').homedir() + '/.deployed-services.json', json, err => {
         if (err) {
-            global.logger.error(`Cannot save projects to file ~/.deployed-projects.json. Error: ${err}`);
+            global.logger.error(`Cannot save projects to file ~/.deployed-services.json. Error: ${err}`);
+        }
+      });
+}
+
+function save_tunnels(){
+    var json = JSON.stringify(global.tunnels);
+    fs.writeFile(require('os').homedir() + '/.deployed-tunnels.json', json, err => {
+        if (err) {
+            global.logger.error(`Cannot save projects to file ~/.deployed-tunnels.json. Error: ${err}`);
         }
       });
 }
@@ -25,5 +34,5 @@ function save_config(){
       });
 }
 
-module.exports = {save_services, save_config}
+module.exports = {save_services, save_tunnels, save_config}
 

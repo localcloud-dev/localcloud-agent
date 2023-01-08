@@ -4,7 +4,6 @@
 */
 
 const storage = require("../utils/storage");
-const auth = require("../utils/auth");
 
 module.exports = function (app) {
 
@@ -12,7 +11,7 @@ module.exports = function (app) {
 
         const service_id = req.params.service_id;
         var new_environment = req.body;
-        let saved_service = global.projects.find(service => service.id === service_id);
+        let saved_service = global.services.find(service => service.id === service_id);
         if (saved_service != undefined) {
             saved_service.environments.forEach((environment, index) => {
                 if (environment.branch == new_environment.branch){
@@ -47,7 +46,7 @@ module.exports = function (app) {
         const service_id = req.params.service_id;
         const environment_name = req.params.environment_name;
 
-        let service = global.projects.find(service => service.id === service_id);
+        let service = global.services.find(service => service.id === service_id);
         if (service != undefined) {
 
             let environment = service.environments.find(environment => environment.name === environment_name);

@@ -61,7 +61,7 @@ module.exports = function (app) {
         console.log(repo_name + " " + updated_branch);
 
         //Update projects
-        let service = global.projects.find(service => service.full_name === repo_full_name);
+        let service = global.services.find(service => service.full_name === repo_full_name);
         if (service != undefined) {
             var environment = service.environments.find(environment => environment.branch === updated_branch);
             if (environment != undefined) {
@@ -98,7 +98,7 @@ module.exports = function (app) {
         console.log(repo_name + " " + updated_branch);
 
         //Update projects
-        let service = global.projects.find(service => service.full_name === repo_full_name);
+        let service = global.services.find(service => service.full_name === repo_full_name);
         if (service != undefined) {
             var environment = service.environments.find(environment => environment.branch === updated_branch);
             if (environment != undefined) {

@@ -90,13 +90,14 @@ global.service_node_config.is_api_key_used = false; // We don't use API Tokens i
 global.service_node_config.port = process.env.PORT || 5005;
 global.service_node_config.domain = process.env.SERVICE_NODE_DOMAIN; // We set this in deployed-service-node-install.sh script
 
-//Projects to deploy
+//Services and Tunnels to deploy
 try {
-  global.projects = JSON.parse(fs.readFileSync(home_dir + '.deployed-projects.json', 'utf8'));
-  console.log(projects);
+  global.services = JSON.parse(fs.readFileSync(home_dir + '.deployed-services.json', 'utf8'));
+  global.tunnels = JSON.parse(fs.readFileSync(home_dir + '.deployed-tunnels.json', 'utf8'));
 } catch (e) {
-  global.logger.info('No projects file ~/.deployed-projects.json has been found');
-  global.projects = [];
+  global.logger.info('No projects file ~/.deployed-services.json has been found');
+  global.services = [];
+  global.tunnels = [];
 }
 
 //Create routes
@@ -110,6 +111,7 @@ proxy.proxy_reload();
 
 //Routes
 require("./routes/service")(app);
+require("./routes/tunnel")(app);
 require("./routes/deploy")(app);
 require("./routes/vpn")(app);
 require("./routes/environment")(app);

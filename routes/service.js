@@ -1,11 +1,10 @@
 /*
     service.js
-    Methods for project deployment
+    Methods for service management
 */
 
 const path = require('path');
 const storage = require("../utils/storage");
-const auth = require("../utils/auth");
 const { nanoid } = require("nanoid");
 
 module.exports = function (app) {
@@ -42,12 +41,12 @@ module.exports = function (app) {
 
         //Check if we have a service with this git url
         //If we have the user should send PUT /service to update the project
-        let saved_service = global.projects.find(project => project.git_url === git_url);
+        let saved_service = global.services.find(project => project.git_url === git_url);
         if (saved_service == undefined) {
             var new_service = {};
 
             new_service.id = nanoid(10);
-            while (global.projects.find(service => service.id === new_service.id)) {
+            while (global.services.find(service => service.id === new_service.id)) {
                 new_service.id = nanoid(10);
             }
 
@@ -60,7 +59,7 @@ module.exports = function (app) {
 
             new_service.environments = environments;
             new_service.git_url = git_url;
-            global.projects.push(new_service);
+            global.services.push(new_service);
 
             storage.save_services();
 
@@ -80,7 +79,7 @@ module.exports = function (app) {
 
     app.get('/service', async function (req, res) {
         res.statusCode = 200;
-        res.end(JSON.stringify(global.projects));
+        res.end(JSON.stringify(global.services));
     });
 
 
@@ -88,7 +87,7 @@ module.exports = function (app) {
 
         const service_id = req.params.service_id;
 
-        let service = global.projects.find(service => service.id === service_id);
+        let service = global.services.find(service => service.id === service_id);
         if (service != undefined) {
 
             res.statusCode = 200;
@@ -107,7 +106,7 @@ module.exports = function (app) {
 
         //We should check that there are no any environments in this service
         //Now we can remove only a service without environments
-        let service = global.projects.find(service => service.id === service_id);
+        let service = global.services.find(service => service.id === service_id);
         if (service != undefined) {
             if (service.environments.length != 0) {
                 res.statusCode = 403;
@@ -116,8 +115,8 @@ module.exports = function (app) {
             }
         }
 
-        let index = global.projects.find(service => service.id === service_id);
-        global.projects.splice(index, 1);
+        let index = global.services.find(service => service.id === service_id);
+        global.services.splice(index, 1);
         storage.save_services();
 
         global.logger.info(`Service: ${service_id} has been removed`);
