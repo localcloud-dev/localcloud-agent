@@ -2,6 +2,9 @@
 
 #Parameters
 #$1 - domain
+#or
+#$1 - join
+#$2 - url to download a zip archive with certificates
 
 #wait until another process are trying updating the system
 while sudo fuser /var/{lib/{dpkg,apt/lists},cache/apt/archives}/lock >/dev/null 2>&1; do sleep 1; done
@@ -43,7 +46,7 @@ sudo apt update
 DEBIAN_FRONTEND=noninteractive sudo apt -y install caddy
 
 #Install Deployed.cc service-node
-git clone https://github.com/deployed-cc/service-node.git
+git clone https://coded-sh@bitbucket.org/coded-sh/service-node.git
 cd service-node
 npm install
 SERVICE_NODE_DOMAIN=$1  pm2 start index.js --name service-node 
@@ -53,26 +56,41 @@ cd $HOME
 wget https://github.com/slackhq/nebula/releases/download/v1.6.1/nebula-linux-amd64.tar.gz 
 tar -xzf nebula-linux-amd64.tar.gz
 chmod +x nebula
-chmod +x nebula-cert
-
-./nebula-cert ca -name "Myorganization, Inc" -duration 34531h
-
-./nebula-cert sign -name "lighthouse_1" -ip "192.168.202.1/24"
-#./nebula-cert sign -name "local_machine_1" -ip "192.168.202.2/24" -groups "devs"
-
-server_ip="$(curl ifconfig.me)"
-
-cp service-node/public/provision/nebula_lighthouse_config.yaml lighthouse_config.yaml
-sed -i -e "s/{{lighthouse_ip}}/$server_ip/g" lighthouse_config.yaml
-
-cp service-node/public/provision/nebula_node_config.yaml node_config.yaml
-sed -i -e "s/{{lighthouse_ip}}/$server_ip/g" node_config.yaml
-
 mkdir /etc/nebula
-cp lighthouse_config.yaml /etc/nebula/config.yaml
-cp ca.crt /etc/nebula/ca.crt
-cp lighthouse_1.crt /etc/nebula/host.crt
-cp lighthouse_1.key /etc/nebula/host.key
+
+if [ "$1" = "join" ]; then
+    echo "Downloading a zip archive with Nebula certificates"
+    DEBIAN_FRONTEND=noninteractive  sudo apt-get install unzip
+    wget $2 -O deployed-join-vpn.zip
+    unzip -o deployed-join-vpn.zip
+    cp config.yaml /etc/nebula/config.yaml
+    cp ca.crt /etc/nebula/ca.crt
+    cp host.crt /etc/nebula/host.crt
+    cp host.key /etc/nebula/host.key
+    ufw allow from 192.168.202.0/24
+else
+    echo "Generate new Nebula certificates"
+    chmod +x nebula-cert
+
+    ./nebula-cert ca -name "Myorganization, Inc" -duration 34531h
+
+    ./nebula-cert sign -name "lighthouse_1" -ip "192.168.202.1/24"
+    #./nebula-cert sign -name "local_machine_1" -ip "192.168.202.2/24" -groups "devs"
+
+    server_ip="$(curl ifconfig.me)"
+
+    cp service-node/public/provision/nebula_lighthouse_config.yaml lighthouse_config.yaml
+    sed -i -e "s/{{lighthouse_ip}}/$server_ip/g" lighthouse_config.yaml
+
+    cp service-node/public/provision/nebula_node_config.yaml node_config.yaml
+    sed -i -e "s/{{lighthouse_ip}}/$server_ip/g" node_config.yaml
+
+    cp lighthouse_config.yaml /etc/nebula/config.yaml
+    cp ca.crt /etc/nebula/ca.crt
+    cp lighthouse_1.crt /etc/nebula/host.crt
+    cp lighthouse_1.key /etc/nebula/host.key
+
+fi
 
 pm2 start ./nebula --name nebula -- -config /etc/nebula/config.yaml
 
@@ -80,16 +98,20 @@ pm2 start ./nebula --name nebula -- -config /etc/nebula/config.yaml
 pm2 startup
 pm2 save
 
-#Generate VPN certificates for the first local machine with full access
-#    .---------- constant part!
-#    vvvv vvvv-- the code from above
-GREEN='\033[0;32m'
-NC='\033[0m' # No Color
+if [ "$1" = "join" ]; then
+    echo "Deployed.cc Service Node agent is installed. Use CLI to deploy services and apps on this server. This server will should be listed in Servers menu item in CLI."
+else
+    #Generate VPN certificates for the first local machine with full access
+    #    .---------- constant part!
+    #    vvvv vvvv-- the code from above
+    GREEN='\033[0;32m'
+    NC='\033[0m' # No Color
 
-certificate_output=$(curl -d '{"name":"local_machine"}' -H "Content-Type: application/json" -X POST http://localhost:5005/vpn_node)
+    certificate_output=$(curl -d '{"name":"local_machine"}' -H "Content-Type: application/json" -X POST http://localhost:5005/vpn_node)
 
-echo -e "${GREEN}+---------------------------------------+${NC}"
-echo "$certificate_output" | tr -d '"'
+    echo -e "${GREEN}+---------------------------------------+${NC}"
+    echo "$certificate_output" | tr -d '"'
+fi
 
 #Reboot (optional)
 #reboot

@@ -36,7 +36,7 @@ curl -XPOST -H "Content-type: application/json" -d '{
 
 #### Secure
 
-By default Deployed.cc creates VPN (virtual private network) with servers used in the project (servers can be located in different data centers) and local machines (laptops, Desktop computers, even Raspberry Pis ). All requests between servers and local machines are sent over VPN. Also VPN allows to expose a local webserver via a public URL with automatic HTTPS.
+By default Deployed.cc creates VPN (virtual private network) with cloud servers (servers can be located in different data centers) and local machines (laptops, Desktop computers, even Raspberry Pis ). All requests between servers and local machines are sent over VPN. Also VPN allows to expose a local webserver via a public URL with automatic HTTPS.
 
 
 ### Main features
