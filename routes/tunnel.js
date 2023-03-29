@@ -13,7 +13,7 @@ module.exports = function (app) {
      app.post('/tunnel', async function (req, res) {
 
         const domain = req.body.domain;
-        const name = req.body.domain;
+        const name = req.body.name;
         const port = req.body.port;
         const vpn_ip = req.body.vpn_ip;
 

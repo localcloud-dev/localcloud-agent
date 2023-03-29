@@ -97,36 +97,23 @@ module.exports = function (app) {
       }
 
       res.statusCode = 201;
-      res.end(JSON.stringify(`
-
-Service Node Agent has been installed.
-
-To deploy a first project you should:
-
-- install Deploy CLI on your local machine (on your laptop, iMac, Desktop computer etc.). Run in Terminal/Console (NPM should be installed on your system):
-      
-    npm install -g https://github.com/deployed-cc/deployed-cli
-
-- check that Deployed CLI is installed:
-
-    deploy -v
-
-Note: If you see a message like 'command not found: deploy' try to install Deployed CLI with sudo: 'sudo npm install -g deployed' 
-      
-- connect your local machine to a virtual private network (this server is already in this network). Run in Terminal/Console on your local machine:
-
-    deploy -j https://${global.service_node_config.domain}/join_vpn/${archive_uuid}
-      
-If everything goes well you'll see menu with 2 items:
-
-    - Add service
-    - Manage services
-      
-Select Add service and follow instructions to deploy your first project.
-
-`));
+      res.end(`https://${global.service_node_config.domain}/join_vpn/${archive_uuid}`);
 
     });
+  });
+
+  //Get VPN nodes
+  app.get('/vpn_node', async function (req, res) {
+
+    const name = req.body.name;
+    if (global.service_node_config.vpn_nodes.find(node => node.name === name) != undefined) {
+      res.statusCode = 403;
+      res.end(JSON.stringify({ "msg": `The node with name ${name} already exists. Use another name.` }));
+      return;
+    }
+
+    res.statusCode = 201;
+    res.end(JSON.stringify(global.service_node_config.vpn_nodes));
 
   });
 
