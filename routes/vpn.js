@@ -19,6 +19,8 @@ module.exports = function (app) {
   app.post('/vpn_node', async function (req, res) {
 
     const name = req.body.name;
+    const type = req.body.type; //possible values: server, local_machine
+
     if (global.service_node_config.vpn_nodes.find(node => node.name === name) != undefined) {
       res.statusCode = 403;
       res.end(JSON.stringify({ "msg": `The node with name ${name} already exists. Use another name.` }));
@@ -36,20 +38,21 @@ module.exports = function (app) {
     const private_ip_mask = `192.168.202.`;
     const IP_mask_min = 2;
     const IP_mask_max = 254;
-    var random_id = randomNumber(IP_mask_min,IP_mask_max);
+    var random_id = randomNumber(IP_mask_min, IP_mask_max);
     while (global.service_node_config.vpn_nodes.find(node => node.ip === `${private_ip_mask}${random_id}`) != undefined) {
-      random_id = randomNumber(IP_mask_min,IP_mask_max);
+      random_id = randomNumber(IP_mask_min, IP_mask_max);
     }
 
     var new_vpn_node = {};
     new_vpn_node.ip = `${private_ip_mask}${random_id}`;
     new_vpn_node.name = name;
+    new_vpn_node.type = type;
 
     global.logger.info(`Random private VPN IP: ${new_vpn_node.ip}`);
 
-    exec(`./nebula-cert sign -name \"${new_vpn_node.name}\" -ip \"${new_vpn_node.ip}\/24" -groups "devs" && sudo ufw allow from ${new_vpn_node.ip}`,{
+    exec(`./nebula-cert sign -name \"${new_vpn_node.name}\" -ip \"${new_vpn_node.ip}\/24" -groups "devs" && sudo ufw allow from ${new_vpn_node.ip}`, {
       cwd: home_dir
-  }, function (err, stdout, stderr) {
+    }, function (err, stdout, stderr) {
 
       if (err != null) {
         res.statusCode = 403;
@@ -97,7 +100,7 @@ module.exports = function (app) {
       }
 
       res.statusCode = 201;
-      res.end(`https://${global.service_node_config.domain}/join_vpn/${archive_uuid}`);
+      res.end(JSON.stringify({ zip_url: `https://${global.service_node_config.domain}/join_vpn/${archive_uuid}` }));
 
     });
   });
@@ -105,14 +108,7 @@ module.exports = function (app) {
   //Get VPN nodes
   app.get('/vpn_node', async function (req, res) {
 
-    const name = req.body.name;
-    if (global.service_node_config.vpn_nodes.find(node => node.name === name) != undefined) {
-      res.statusCode = 403;
-      res.end(JSON.stringify({ "msg": `The node with name ${name} already exists. Use another name.` }));
-      return;
-    }
-
-    res.statusCode = 201;
+    res.statusCode = 200;
     res.end(JSON.stringify(global.service_node_config.vpn_nodes));
 
   });
@@ -139,9 +135,24 @@ module.exports = function (app) {
     }
   });
 
+
+  //ToDo: See tasks
+  app.delete('/vpn_node', async function (req, res) {
+    const name = req.body.name;
+    if (global.service_node_config.vpn_nodes.find(node => node.name === name) != undefined) {
+      res.statusCode = 403;
+      res.end(JSON.stringify({ "msg": `The node with name ${name} not found.` }));
+      return;
+    }
+
+    res.statusCode = 201;
+    res.end(JSON.stringify({}));
+
+  });
+
 }
 
-function randomNumber(min, max) { 
+function randomNumber(min, max) {
   return Math.floor(Math.random() * (max - min) + min);
-} 
+}
 
