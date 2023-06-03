@@ -14,9 +14,11 @@
     "body-parser": "^1.20.1",
     "cors": "^2.8.5",
     "dotenv": "^16.0.3",
+    "gitlog": "^4.0.4",
     "nanoid": "^3.3.4",
     "polka": "^0.5.2",
     "portfinder": "^1.0.32",
+    "redis": "^4.6.5",
     "winston": "^3.8.2"
   }
 }

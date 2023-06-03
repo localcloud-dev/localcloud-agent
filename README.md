@@ -1,22 +1,22 @@
 **Note: The project is in active development - please, use it only for non-production environments until we release version 1.0**
 
-# Deployed.cc | Service Node
+# LocalCloud | Server Agent
 
-[Deployed.cc](https://deployed.cc) is the multi-cloud developer-friendly secure Platform as a service (PaaS).
+[LocalCloud](https://localcloud.dev) is the multi-cloud developer-friendly secure Platform as a service (PaaS).
 
-More info about the project: [deployed.cc](https://deployed.cc)
+More info about the project: [localcloud.dev](https://localcloud.dev)
 
-Contact us if you have any questions: hey[a]deployed.cc
+Contact us if you have any questions: hey[a]localcloud.dev
 
 **Don't forget to click on Star if you like the idea.**
 
 #### Multi-cloud and Cloud-agnostic
 
-You can use Deployed.cc with virtually any cloud provider. You can even deploy one app on servers from different data centers. There are just 3 conditions for a cloud server - public IP address, SSH and Ubuntu 22.04.
+You can use LocalCloud with virtually any cloud provider. You can even deploy one app on servers from different data centers. There are just 3 conditions for a cloud server - public IP address, SSH and Ubuntu 22.04.
 
 #### Developer-friendly
 
-Deployed.cc is the API-driven platform. This means that you can do everything using API. Of course, you still can use CLI to manage your projects. For example, you can deploy your webserver with a Dockerfile inside a webserver's repository on a cloud server in just one request:
+LocalCloud is the API-driven platform. This means that you can do everything using API. Of course, you still can use CLI to manage your projects. For example, you can deploy your webserver with a Dockerfile inside a webserver's repository on a cloud server in just one request:
 
 **API Request Example:**
 ```
@@ -29,14 +29,14 @@ curl -XPOST -H "Content-type: application/json" -d '{
         "domain":"project.yourdomain.com",
         "port":"4008"
     }]
-}' 'https://deployed.yourdomain.com/service'
+}' 'https://project.yourdomain.com/service'
 
 ```
 
 
 #### Secure
 
-By default Deployed.cc creates VPN (virtual private network) with cloud servers (servers can be located in different data centers) and local machines (laptops, Desktop computers, even Raspberry Pis ). All requests between servers and local machines are sent over VPN. Also VPN allows to expose a local webserver via a public URL with automatic HTTPS.
+By default LocalCloud creates VPN (virtual private network) with cloud servers (servers can be located in different data centers) and local machines (laptops, Desktop computers, even Raspberry Pis ). All requests between servers and local machines are sent over VPN. Also VPN allows to expose a local webserver via a public URL with automatic HTTPS.
 
 
 ### Main features
@@ -56,7 +56,7 @@ By default Deployed.cc creates VPN (virtual private network) with cloud servers 
 
 ### Quickstart
 
-Deployed.cc uses Git to manage deployment that's why you don’t need to learn new commands or configuration files to deploy your projects. You can use a self-hosted instance of Deployed or our fully managed cloud platform (soon).
+LocalCloud uses Git to manage deployment that's why you don’t need to learn new commands or configuration files to deploy your projects. You can use a self-hosted instance of Deployed or our fully managed cloud platform (soon).
 
 #### What you need to deploy the first project:
 - A fresh (new) server (VPS, Public Cloud, Dedicated Server, etc) with public IP, SSH access, and Ubuntu 22.04. If you don't know where to get a cloud server try Hetzner, Scaleway, OVH or DigitalOcean. All these cloud providers are easier to use and much more cheap than AWS, GCP or Azure.
@@ -69,24 +69,24 @@ Deployed.cc uses Git to manage deployment that's why you don’t need to learn n
 - SSH into your server
 - Install the service-node agent on this server (replace "service_node_domain" with your domain, for the example in the step 1 it could be agent.test.project.com):
 ```
-curl https://raw.githubusercontent.com/deployed-cc/service-node/main/public/provision/deployed-service-node-install.sh | sh -s service_node_domain
+curl https://raw.githubusercontent.com/localcloud-dev/localcloud-agent/main/public/provision/deployed-service-node-install.sh | sh -s service_node_domain
 ```
 **service_node_domain** will be used for Bitbucket, Github and other webhooks, should be without http and https, for example: agent.test.project.com or deploy.domain.com, etc
 
-- Wait until the service-node agent finishes the server provision and follow the steps in the final message. If everything goes well, you'll see something like this:
+- Wait until the LocalCloud agent finishes the server provision and follow the steps in the final message. If everything goes well, you'll see something like this:
 ```
 To deploy a first project you should:
 
-- install Deploy CLI on your local machine (on your laptop, iMac, Desktop computer etc.). Run in Terminal/Console (NPM should be installed on your system):
+- install LocalCloud CLI on your local machine (on your laptop, iMac, Desktop computer etc.). Run in Terminal/Console (NPM should be installed on your system):
       
-    npm install -g https://github.com/deployed-cc/deployed-cli
+    npm install -g https://github.com/localcloud-dev/localcloud-cli
 
 ...
 ```
 
-#### How to deploy a project with cloud Deployed.cc
+#### How to deploy a project with the managed LocalCloud
 
-- Will be available from March, 2023
+- Will be available from July, 2023
 
 
 ### License

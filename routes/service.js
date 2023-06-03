@@ -41,27 +41,43 @@ module.exports = function (app) {
 
         //Check if we have a service with this git url
         //If we have the user should send PUT /service to update the project
-        let saved_service = global.services.find(project => project.git_url === git_url);
-        if (saved_service == undefined) {
+        //let saved_service = global.services.find(project => project.git_url === git_url);
+        let result = await global.redis_client.ft.search(
+            'idx:services',
+            `@git_url: /${git_url}/`
+        );
+        console.log(JSON.stringify(result, null, 2));
+        
+        if (result.total == 0) {
             var new_service = {};
 
             new_service.id = nanoid(10);
-            while (global.services.find(service => service.id === new_service.id)) {
+            var id_search_result = await global.redis_client.ft.search(
+                'idx:services',
+                `@id: /${new_service.id}/`
+            );
+            console.log(JSON.stringify(result, null, 2));
+            
+            while (id_search_result.total != 0) {
                 new_service.id = nanoid(10);
+                id_search_result = await global.redis_client.ft.search(
+                    'idx:services',
+                    `@id:${new_service.id}`
+                );
+                console.log(JSON.stringify(result, null, 2));
             }
 
             new_service.name = repository_name;
             new_service.full_name = repository_full_name;
 
             environments.forEach((environment, index) => {
-                environment.status = "to_deploy";
+                environment.image_status = 'to_build';
             })
 
             new_service.environments = environments;
             new_service.git_url = git_url;
-            global.services.push(new_service);
 
-            storage.save_services();
+            storage.add_service(new_service);
 
             global.logger.info(`New project added:`);
             global.logger.info(`${JSON.stringify(new_service)}`);
@@ -81,7 +97,6 @@ module.exports = function (app) {
         res.statusCode = 200;
         res.end(JSON.stringify(global.services));
     });
-
 
     app.get('/service/:service_id/environment', async function (req, res) {
 

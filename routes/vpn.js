@@ -10,6 +10,7 @@ const crypto = require('crypto');
 const fs = require('fs')
 const exec = require('child_process').exec;
 const storage = require("../utils/storage");
+const { nanoid } = require("nanoid");
 
 module.exports = function (app) {
 
@@ -21,12 +22,12 @@ module.exports = function (app) {
     const name = req.body.name;
     const type = req.body.type; //possible values: server, local_machine
 
-    if (global.service_node_config.vpn_nodes.find(node => node.name === name) != undefined) {
+    if (global.vpn_nodes.find(node => node.name === name) != undefined) {
       res.statusCode = 403;
       res.end(JSON.stringify({ "msg": `The node with name ${name} already exists. Use another name.` }));
       return;
     }
-
+    name
     const archive_uuid = crypto.randomUUID();
     global.logger.info(`Adding new VPN node ${name}`);
 
@@ -39,28 +40,34 @@ module.exports = function (app) {
     const IP_mask_min = 2;
     const IP_mask_max = 254;
     var random_id = randomNumber(IP_mask_min, IP_mask_max);
-    while (global.service_node_config.vpn_nodes.find(node => node.ip === `${private_ip_mask}${random_id}`) != undefined) {
+    while (global.vpn_nodes.find(node => node.ip === `${private_ip_mask}${random_id}`) != undefined) {
       random_id = randomNumber(IP_mask_min, IP_mask_max);
     }
 
     var new_vpn_node = {};
     new_vpn_node.ip = `${private_ip_mask}${random_id}`;
     new_vpn_node.name = name;
-    new_vpn_node.type = type;
+    new_vpn_node.type = [type];
+    new_vpn_node.id = nanoid(10);
+    while (global.vpn_nodes.find(vpn_node => vpn_node.id === new_vpn_node.id)) {
+      new_vpn_node.id = nanoid(10);
+    }
 
     global.logger.info(`Random private VPN IP: ${new_vpn_node.ip}`);
 
-    exec(`./nebula-cert sign -name \"${new_vpn_node.name}\" -ip \"${new_vpn_node.ip}\/24" -groups "devs" && sudo ufw allow from ${new_vpn_node.ip}`, {
+    //Note: we use id of a new node in parameter -name below because Nebula uses -name as id
+    exec(`./nebula-cert sign -ca-crt /etc/nebula/ca.crt -ca-key /etc/nebula/ca.key -name \"${new_vpn_node.id}\" -ip \"${new_vpn_node.ip}\/24" -groups "devs" && sudo ufw allow from ${new_vpn_node.ip}`, {
       cwd: home_dir
     }, function (err, stdout, stderr) {
 
       if (err != null) {
+        global.logger.error(`Cannot generate a certificate for a new node. Error: ${err}`);
         res.statusCode = 403;
         res.end(JSON.stringify({ "msg": `Cannot generate a certificate for a new node. Error: ${err}` }));
         return;
       }
 
-      global.service_node_config.vpn_nodes.push(new_vpn_node);
+      global.vpn_nodes.push(new_vpn_node);
       storage.save_config();
 
       global.logger.info(`A certificate for a new node is created.`);
@@ -72,10 +79,14 @@ module.exports = function (app) {
         fs.mkdirSync(archive_root, { recursive: true });
       }
 
-      fs.copyFileSync(`${home_dir}/ca.crt`, `${archive_root}/ca.crt`);
+      fs.copyFileSync(`/etc/nebula/ca.crt`, `${archive_root}/ca.crt`);
       fs.copyFileSync(`${home_dir}/node_config.yaml`, `${archive_root}/config.yaml`);
-      fs.copyFileSync(`${home_dir}/${name}.crt`, `${archive_root}/host.crt`);
-      fs.copyFileSync(`${home_dir}/${name}.key`, `${archive_root}/host.key`);
+      fs.copyFileSync(`${home_dir}/${new_vpn_node.id}.crt`, `${archive_root}/host.crt`);
+      fs.copyFileSync(`${home_dir}/${new_vpn_node.id}.key`, `${archive_root}/host.key`);
+
+      //Add a host config, now we use only machine_id (or server_id)
+      let machine_config = JSON.stringify(new_vpn_node);
+      fs.writeFileSync(`${archive_root}/machine_config.json`, machine_config);
 
       //Generate ZIP from $HOME/$archive_uuid
       const zip = new adm_zip();
@@ -83,6 +94,7 @@ module.exports = function (app) {
       zip.addLocalFile(`${archive_root}/config.yaml`);
       zip.addLocalFile(`${archive_root}/host.crt`);
       zip.addLocalFile(`${archive_root}/host.key`);
+      zip.addLocalFile(`${archive_root}/machine_config.json`);
 
       // Define zip file name
       const download_name = `deployed-cc-vpn-setup-${archive_uuid}.zip`;
@@ -91,8 +103,8 @@ module.exports = function (app) {
       try {
 
         //Remove crt and key files of this new node and a folder used to create a zip archive
-        fs.unlinkSync(`${home_dir}/${name}.crt`)
-        fs.unlinkSync(`${home_dir}/${name}.key`)
+        fs.unlinkSync(`${home_dir}/${new_vpn_node.id}.crt`)
+        fs.unlinkSync(`${home_dir}/${new_vpn_node.id}.key`)
         fs.rmSync(archive_root, { recursive: true, force: true });
 
       } catch (err) {
@@ -109,7 +121,7 @@ module.exports = function (app) {
   app.get('/vpn_node', async function (req, res) {
 
     res.statusCode = 200;
-    res.end(JSON.stringify(global.service_node_config.vpn_nodes));
+    res.end(JSON.stringify(global.vpn_nodes));
 
   });
 
@@ -139,7 +151,7 @@ module.exports = function (app) {
   //ToDo: See tasks
   app.delete('/vpn_node', async function (req, res) {
     const name = req.body.name;
-    if (global.service_node_config.vpn_nodes.find(node => node.name === name) != undefined) {
+    if (global.vpn_nodes.find(node => node.name === name) != undefined) {
       res.statusCode = 403;
       res.end(JSON.stringify({ "msg": `The node with name ${name} not found.` }));
       return;

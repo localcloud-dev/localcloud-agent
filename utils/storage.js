@@ -1,38 +1,44 @@
 const fs = require('fs');
 
 function save_services(){
-    var json = JSON.stringify(global.services);
-    fs.writeFile(require('os').homedir() + '/.deployed-services.json', json, err => {
-        if (err) {
-            global.logger.error(`Cannot save projects to file ~/.deployed-services.json. Error: ${err}`);
-        }
-      });
+    global.redis_client.set('services', JSON.stringify(global.services));
 }
 
+async function add_service(service){
+    await client.hSet(`service:${service.id}`, {
+        id: service.id,
+        git_url: service.git_url,
+        name: service.name,
+        full_name: service.full_name,
+        environments: JSON.stringify(service.environments)
+    })
+}
+
+
 function save_tunnels(){
-    var json = JSON.stringify(global.tunnels);
-    fs.writeFile(require('os').homedir() + '/.deployed-tunnels.json', json, err => {
-        if (err) {
-            global.logger.error(`Cannot save projects to file ~/.deployed-tunnels.json. Error: ${err}`);
-        }
-      });
+    global.redis_client.set('tunnels', JSON.stringify(global.tunnels));
 }
 
 function save_config(){
 
     //We should "hide" api_token before saving and "show" it again after saving
     const api_token = global.service_node_config.api_token;
-    global.service_node_config.api_token = null;
-    
-    var json = JSON.stringify(global.service_node_config);
-    global.service_node_config.api_token = api_token;
+    global.service_node_config.api_token = "";
 
-    fs.writeFile(require('os').homedir() + '/.deployed-config.json', json, err => {
+    //Save VPN nodes to local file
+    fs.writeFile(require('os').homedir() + '/.deployed-config.json', JSON.stringify(global.service_node_config), err => {
         if (err) {
             global.logger.error(`Cannot save projects to file ~/.deployed-config.json. Error: ${err}`);
         }
       });
+
+    //Save VPN nodes to DB
+    global.redis_client.set('vpn_nodes', JSON.stringify(global.vpn_nodes));
+
+    //Restore API token
+    global.service_node_config.api_token = api_token;
+
 }
 
-module.exports = {save_services, save_tunnels, save_config}
+module.exports = {save_services, save_tunnels, save_config, add_service}
 

@@ -1,0 +1,11 @@
+config:
+  target: "https://agent.service.deployed.cc"
+  phases:
+    - duration: 600
+      arrivalRate: 100
+      name: Sustained load
+scenarios:
+  - name: "Health"
+    flow:
+      - get:
+          url: "/hey"
