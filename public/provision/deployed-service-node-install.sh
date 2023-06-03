@@ -12,6 +12,7 @@ while sudo fuser /var/lib/dpkg/lock-frontend >/dev/null 2>&1; do sleep 1; done
 
 #Disable "Pending kernel upgrade" message. OVH cloud instances show this message very often, for
 sudo sed -i "s/#\$nrconf{kernelhints} = -1;/\$nrconf{kernelhints} = -1;/g" /etc/needrestart/needrestart.conf
+sudo sed -i "/#\$nrconf{restart} = 'i';/s/.*/\$nrconf{restart} = 'a';/" /etc/needrestart/needrestart.conf
 
 #Open only necessary ports
 sudo ufw allow 80
@@ -199,17 +200,17 @@ else
     echo ""
     echo "- install Deploy CLI on your local machine (on your laptop, iMac, Desktop computer etc.). Run in Terminal/Console (NPM should be installed on your system):"
     echo ""
-    echo "    npm install -g https://github.com/deployed-cc/deployed-cli"
+    echo "    npm install -g https://github.com/localcloud-dev/localcloud-cli"
     echo ""
     echo "- check that Deployed CLI is installed:"
     echo ""
     echo "    deploy -v"
     echo ""
-    echo "Note: If you see a message like 'command not found: deploy' try to install Deployed CLI with sudo: 'sudo npm install -g https://github.com/deployed-cc/deployed-cli'"
+    echo "Note: If you see a message like 'command not found: deploy' try to install Deployed CLI with sudo: 'sudo npm install -g https://github.com/localcloud-dev/localcloud-cli'"
     echo ""
     echo "- connect your local machine to Deployed.cc VPN (this server is already in this network). Run in Terminal/Console on your local machine:"
     echo ""
-    echo "    deploy -j $zip_url"
+    echo "    sudo deploy -j $zip_url"
     echo ""
     echo "If everything goes well you'll see menu:"
     echo ""

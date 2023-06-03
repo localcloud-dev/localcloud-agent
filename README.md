@@ -1,4 +1,4 @@
-**Note: The project is in active development - please, use it only for non-production environments until we release version 1.0**
+**Note: The project is in active development - API and workflows are subject to change**
 
 # LocalCloud | Server Agent
 
@@ -8,7 +8,7 @@ More info about the project: [localcloud.dev](https://localcloud.dev)
 
 Contact us if you have any questions: hey[a]localcloud.dev
 
-**Don't forget to click on Star if you like the idea.**
+**Don't forget to click on Star if you like the project.**
 
 #### Multi-cloud and Cloud-agnostic
 
@@ -56,14 +56,14 @@ By default LocalCloud creates VPN (virtual private network) with cloud servers (
 
 ### Quickstart
 
-LocalCloud uses Git to manage deployment that's why you don’t need to learn new commands or configuration files to deploy your projects. You can use a self-hosted instance of Deployed or our fully managed cloud platform (soon).
+LocalCloud uses Git to manage deployment that's why you don’t need to learn new commands or configuration files to deploy your projects. You can use a self-hosted instance of LocalCloud or our fully managed cloud platform (soon).
 
 #### What you need to deploy the first project:
 - A fresh (new) server (VPS, Public Cloud, Dedicated Server, etc) with public IP, SSH access, and Ubuntu 22.04. If you don't know where to get a cloud server try Hetzner, Scaleway, OVH or DigitalOcean. All these cloud providers are easier to use and much more cheap than AWS, GCP or Azure.
 - A custom domain and access to DNS records of this domain
 - Dockerfile in the project's root directory
 
-#### How to deploy a project with self-hosted Deployed.cc
+#### How to deploy a project with self-hosted LocalCloud
 
 - Add A record to DNS with the public IP address of your server. For example, if a public IP of your server is 153.111.51.139 and your custom domain is project.com, you can add a wildcard A record *.test.project.com -> 153.111.51.139. This is just an example, you should update with your real IP address and domain name.
 - SSH into your server
@@ -93,7 +93,7 @@ To deploy a first project you should:
 
 - [Server Side Public License](https://www.mongodb.com/licensing/server-side-public-license)
 
-### Awesome open-source projects that we use in Deployed.cc
+### Awesome open-source projects that we use in LocalCloud
 
 - [Nebula](https://github.com/slackhq/nebula). Nebula was created at Slack Technologies, Inc by Nate Brown and Ryan Huber, with contributions from Oliver Fross, Alan Lam, Wade Simmons, and Lining Wang. Nebula is licensed under the [MIT License](https://github.com/slackhq/nebula/blob/master/LICENSE).
 - [Caddy](https://github.com/caddyserver/caddy). Matthew Holt began developing Caddy in 2014 while studying computer science at Brigham Young University. Caddy is a registered trademark of Stack Holdings GmbH. Caddy is a project of [ZeroSSL](https://zerossl.com/), a Stack Holdings company. Caddy is licensed under the [Apache License 2.0](https://github.com/caddyserver/caddy/blob/master/LICENSE).
