@@ -5,7 +5,7 @@ function save_services(){
 }
 
 async function add_service(service){
-    await client.hSet(`service:${service.id}`, {
+    await global.redis_client.hSet(`service:${service.id}`, {
         id: service.id,
         git_url: service.git_url,
         name: service.name,

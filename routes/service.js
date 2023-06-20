@@ -13,7 +13,6 @@ module.exports = function (app) {
     //Note: before calling this endpoint you should add public ssh key of a server where you want to deploy to Bitbucket, GitLab, GitHub access keys
     //and add webhook to your Bitbucket, GitHub repository. Hints about how to do this are shown when you run "deploy"
     app.post('/service', async function (req, res) {
-
         const git_url = req.body.git_url;
         const environments = req.body.environments;
         const repository_name = path.parse(git_url.substring(git_url.lastIndexOf('/') + 1)).name;
@@ -39,14 +38,18 @@ module.exports = function (app) {
         const repository_workspace = git_url.substring(index + 1 + git_base_url.length, git_url.lastIndexOf('/'));
         const repository_full_name = `${repository_workspace}/${repository_name}`;
 
-        //Check if we have a service with this git url
+        //Check if we have a service with this name
         //If we have the user should send PUT /service to update the project
         //let saved_service = global.services.find(project => project.git_url === git_url);
+        const REGEXP_SPECIAL_CHAR =
+  /[\!\#\$\%\^\&\*\)\(\+\=\.\<\>\{\}\[\]\:\;\'\"\|\~\`\_\-]/g;
+        
         let result = await global.redis_client.ft.search(
             'idx:services',
-            `@git_url: /${git_url}/`
+            `@name: {${repository_name.replace(REGEXP_SPECIAL_CHAR, '\\$&')}}`
         );
-        console.log(JSON.stringify(result, null, 2));
+        
+        console.log(JSON.stringify(result));
         
         if (result.total == 0) {
             var new_service = {};
@@ -86,7 +89,7 @@ module.exports = function (app) {
             res.end(JSON.stringify({}));
 
         } else {
-            global.logger.info(`Project with git url: ${git_url} already exists. Use PUT /service to update a project.`);
+            global.logger.info(`Project with name: ${repository_name} already exists. Use PUT /service to update a project.`);
 
             res.statusCode = 409;
             res.end(JSON.stringify({ "msg": `Project with git url: ${git_url} already exists. Use PUT /service to update a project.` }));

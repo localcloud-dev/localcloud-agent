@@ -93,7 +93,7 @@ async function connect_redis() {
   //Create Redis Indexes
   try {
     await global.redis_client.ft.create('idx:services', {
-      git_url: { type: redis_db.SchemaFieldTypes.TEXT, sortable: true },
+      name: redis_db.SchemaFieldTypes.TAG,
       id: redis_db.SchemaFieldTypes.TEXT,
     }, {
         ON: 'HASH',
