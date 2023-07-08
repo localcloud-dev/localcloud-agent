@@ -1,4 +1,6 @@
 const fs = require('fs');
+const REGEXP_SPECIAL_CHAR =
+/[\!\#\$\%\^\&\*\)\(\+\=\.\<\>\{\}\[\]\:\;\'\"\|\~\`\_\-]/g;
 
 function save_services(){
     global.redis_client.set('services', JSON.stringify(global.services));
@@ -14,6 +16,40 @@ async function add_service(service){
     })
 }
 
+async function get_all_services(){   
+    let results = await global.redis_client.ft.search(
+        `idx:services`,
+        `*`
+    );
+
+    //Simplify the output format
+    return simplify_format(results.documents);
+}
+
+async function get_service_by_id(service_id){   
+    let results = await global.redis_client.ft.search(
+        'idx:services',
+        `@id: /${service_id}/`
+    );
+
+    //Simplify the output format
+    return simplify_format(results.documents);
+}
+
+async function remove_service_by_id(service_id){   
+    await global.redis_client.del(`service:${service_id}`);
+}
+
+function simplify_format(documents){
+    var services = [];
+    if (documents != undefined){
+        documents.forEach((service) => {
+            services.push(service.value);
+        });
+    }
+    console.log(services);
+    return services;
+}
 
 function save_tunnels(){
     global.redis_client.set('tunnels', JSON.stringify(global.tunnels));
@@ -40,5 +76,5 @@ function save_config(){
 
 }
 
-module.exports = {save_services, save_tunnels, save_config, add_service}
+module.exports = {save_services, save_tunnels, save_config, add_service, get_all_services, get_service_by_id,remove_service_by_id}
 

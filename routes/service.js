@@ -5,7 +5,8 @@
 
 const path = require('path');
 const storage = require("../utils/storage");
-const { nanoid } = require("nanoid");
+const { customAlphabet } = require("nanoid");
+const nanoid = customAlphabet('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz', 11); //~117 years or 1B IDs needed, in order to have a 1% probability of at least one collision, https://zelark.github.io/nano-id-cc/
 
 module.exports = function (app) {
 
@@ -49,12 +50,14 @@ module.exports = function (app) {
             `@name: {${repository_name.replace(REGEXP_SPECIAL_CHAR, '\\$&')}}`
         );
         
-        console.log(JSON.stringify(result));
+        console.log(JSON.stringify(result, null, 2));
         
         if (result.total == 0) {
             var new_service = {};
 
-            new_service.id = nanoid(10);
+            new_service.id = nanoid();
+            new_service.id = new_service.id.replace(REGEXP_SPECIAL_CHAR, '\\$&');
+
             var id_search_result = await global.redis_client.ft.search(
                 'idx:services',
                 `@id: /${new_service.id}/`
@@ -62,7 +65,7 @@ module.exports = function (app) {
             console.log(JSON.stringify(result, null, 2));
             
             while (id_search_result.total != 0) {
-                new_service.id = nanoid(10);
+                new_service.id = nanoid();
                 id_search_result = await global.redis_client.ft.search(
                     'idx:services',
                     `@id:${new_service.id}`
@@ -82,7 +85,7 @@ module.exports = function (app) {
 
             storage.add_service(new_service);
 
-            global.logger.info(`New project added:`);
+            global.logger.info(`New service added:`);
             global.logger.info(`${JSON.stringify(new_service)}`);
 
             res.statusCode = 201;
@@ -97,34 +100,43 @@ module.exports = function (app) {
     });
 
     app.get('/service', async function (req, res) {
+        //Load services from DB and simplify the output format
+        let services = await storage.get_all_services();
         res.statusCode = 200;
-        res.end(JSON.stringify(global.services));
+        res.end(JSON.stringify(services));
     });
 
-    app.get('/service/:service_id/environment', async function (req, res) {
+    app.get('/service/:service_id', async function (req, res) {
+        //Search a service with :service_id in DB and simplify the output format
+        let service_id = req.params.service_id;
+        let services = await storage.get_service_by_id(service_id);
 
-        const service_id = req.params.service_id;
-
-        let service = global.services.find(service => service.id === service_id);
-        if (service != undefined) {
-
+        if (services.length == 0){
+            res.statusCode = 404;
+            res.end(JSON.stringify({ "msg": `Service with id: ${service_id} not found.` }));
+        }else{
             res.statusCode = 200;
-            res.end(JSON.stringify(service.environments));
-
-        } else {
-            res.statusCode = 403;
-            res.end(JSON.stringify({ msg: "Service not found" }));
+            res.end(JSON.stringify(services[0]));
         }
-
     });
 
     app.delete('/service/:service_id', async function (req, res) {
 
-        const service_id = req.params.service_id;
+        let service_id = req.params.service_id;
+        let services = await storage.get_service_by_id(service_id);
+        
+        if (services.length == 0){
+            res.statusCode = 404;
+            res.end(JSON.stringify({ "msg": `Service with id: ${service_id} not found.` }));
+        }else{
+            await storage.remove_service_by_id(service_id);
+            res.statusCode = 200;
+            res.end();
+        }
 
         //We should check that there are no any environments in this service
         //Now we can remove only a service without environments
-        let service = global.services.find(service => service.id === service_id);
+        /*let service = global.services.find(service => service.id === service_id);
         if (service != undefined) {
             if (service.environments.length != 0) {
                 res.statusCode = 403;
@@ -139,7 +151,7 @@ module.exports = function (app) {
 
         global.logger.info(`Service: ${service_id} has been removed`);
         res.statusCode = 200;
-        res.end("");
+        res.end("");*/
 
     });
 

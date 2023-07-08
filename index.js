@@ -26,9 +26,39 @@ const utils = require("./utils/utils");
 app.use(cors());
 app.use(json());
 
+const { format, createLogger, transports } = require("winston");
+const { combine, timestamp, label, printf, prettyPrint } = format;
+
+const logger = createLogger({
+  level: 'info',
+  format: combine(
+    timestamp({
+      format: "MMM-DD-YYYY HH:mm:ss",
+    }),
+    prettyPrint()
+  ),
+  transports: [
+    //
+    // - Write all logs with importance level of `error` or less to `error.log`
+    // - Write all logs with importance level of `info` or less to `info.log`
+    //
+    new transports.Console(),
+    new transports.File({ filename: 'error.log', level: 'error' }),
+    new transports.File({ filename: 'info.log' }),
+  ],
+});
+global.logger = logger;
+
 // Log every request
 function log_request(req, res, next) {
-  logger.info(`~> Received ${req.method} on ${req.url}`);
+  logger.info(`=======================================`);
+  logger.info(`~> Request: ${req.method} on ${req.url}`);
+  if (req.body != undefined){
+    logger.info(`~> Body:`);
+    logger.info(`${JSON.stringify(req.body)}`);
+  }
+  logger.info(`=======================================`);
+
   next(); // move on
 }
 
@@ -55,22 +85,6 @@ async function authorize(req, res, next) {
 //Add middleware
 app.use(log_request, authorize, add_response_headers);
 
-const winston = require('winston');
-const logger = winston.createLogger({
-  level: 'info',
-  format: winston.format.json(),
-  transports: [
-    //
-    // - Write all logs with importance level of `error` or less to `error.log`
-    // - Write all logs with importance level of `info` or less to `info.log`
-    //
-    new winston.transports.Console(),
-    new winston.transports.File({ filename: 'error.log', level: 'error' }),
-    new winston.transports.File({ filename: 'info.log' }),
-  ],
-});
-global.logger = logger;
-
 //Log examples:
 //logger.info('Some info');
 //logger.error('Some error');
@@ -96,7 +110,7 @@ async function connect_redis() {
       name: redis_db.SchemaFieldTypes.TAG,
       id: redis_db.SchemaFieldTypes.TEXT,
     }, {
-        ON: 'HASH',
+        ON: 'JSON',
         PREFIX: 'service:',
     });
 } catch (e) {
