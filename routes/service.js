@@ -101,7 +101,7 @@ module.exports = function (app) {
 
     app.get('/service', async function (req, res) {
         //Load services from DB and simplify the output format
-        let services = await storage.get_all_services();
+        let services = await storage.get_services();
         res.statusCode = 200;
         res.end(JSON.stringify(services));
     });

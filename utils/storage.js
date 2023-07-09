@@ -2,6 +2,7 @@ const fs = require('fs');
 const REGEXP_SPECIAL_CHAR =
 /[\!\#\$\%\^\&\*\)\(\+\=\.\<\>\{\}\[\]\:\;\'\"\|\~\`\_\-]/g;
 
+//ToDo: replace with update_service(service_id)
 function save_services(){
     global.redis_client.set('services', JSON.stringify(global.services));
 }
@@ -16,7 +17,7 @@ async function add_service(service){
     })
 }
 
-async function get_all_services(){   
+async function get_services(){   
     let results = await global.redis_client.ft.search(
         `idx:services`,
         `*`
@@ -40,19 +41,37 @@ async function remove_service_by_id(service_id){
     await global.redis_client.del(`service:${service_id}`);
 }
 
-function simplify_format(documents){
-    var services = [];
-    if (documents != undefined){
-        documents.forEach((service) => {
-            services.push(service.value);
-        });
-    }
-    console.log(services);
-    return services;
-}
-
 function save_tunnels(){
     global.redis_client.set('tunnels', JSON.stringify(global.tunnels));
+}
+
+async function add_vpn_node(vpn_node){
+    await global.redis_client.hSet(`vpnnode:${vpn_node.id}`, {
+        id: vpn_node.id,
+        ip: vpn_node.ip,
+        name: vpn_node.name,
+        type: JSON.stringify(vpn_node.type)
+    })
+}
+
+async function get_vpn_nodes(){
+    let results = await global.redis_client.ft.search(
+        `idx:vpnnodes`,
+        `*`
+    );
+
+    //Simplify the output format
+    return simplify_format(results.documents);
+}
+
+async function get_vpn_node_by_id(node_id){   
+    let results = await global.redis_client.ft.search(
+        'idx:vpnnodes',
+        `@id: /${node_id}/`
+    );
+
+    //Simplify the output format
+    return simplify_format(results.documents);
 }
 
 function save_config(){
@@ -69,12 +88,23 @@ function save_config(){
       });
 
     //Save VPN nodes to DB
-    global.redis_client.set('vpn_nodes', JSON.stringify(global.vpn_nodes));
+    //global.redis_client.set('vpn_nodes', JSON.stringify(global.vpn_nodes));
 
     //Restore API token
     global.service_node_config.api_token = api_token;
 
 }
 
-module.exports = {save_services, save_tunnels, save_config, add_service, get_all_services, get_service_by_id,remove_service_by_id}
+function simplify_format(documents){
+    var services = [];
+    if (documents != undefined){
+        documents.forEach((service) => {
+            services.push(service.value);
+        });
+    }
+    console.log(services);
+    return services;
+}
+
+module.exports = {save_services, save_tunnels, save_config, add_service, get_services, get_service_by_id,remove_service_by_id, add_vpn_node, get_vpn_nodes, get_vpn_node_by_id}
 

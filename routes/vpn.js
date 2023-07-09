@@ -10,7 +10,8 @@ const crypto = require('crypto');
 const fs = require('fs')
 const exec = require('child_process').exec;
 const storage = require("../utils/storage");
-const { nanoid } = require("nanoid");
+const { customAlphabet } = require("nanoid");
+const nanoid = customAlphabet('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz', 11); //~117 years or 1B IDs needed, in order to have a 1% probability of at least one collision, https://zelark.github.io/nano-id-cc/
 
 module.exports = function (app) {
 
@@ -22,12 +23,13 @@ module.exports = function (app) {
     const name = req.body.name;
     const type = req.body.type; //possible values: server, local_machine
 
-    if (global.vpn_nodes.find(node => node.name === name) != undefined) {
+    let vpn_nodes = storage.get_vpn_nodes();
+    if (vpn_nodes.find(node => node.name === name) != undefined) {
       res.statusCode = 403;
       res.end(JSON.stringify({ "msg": `The node with name ${name} already exists. Use another name.` }));
       return;
     }
-    name
+
     const archive_uuid = crypto.randomUUID();
     global.logger.info(`Adding new VPN node ${name}`);
 
@@ -40,7 +42,8 @@ module.exports = function (app) {
     const IP_mask_min = 2;
     const IP_mask_max = 254;
     var random_id = randomNumber(IP_mask_min, IP_mask_max);
-    while (global.vpn_nodes.find(node => node.ip === `${private_ip_mask}${random_id}`) != undefined) {
+
+    while (vpn_nodes.find(node => node.ip === `${private_ip_mask}${random_id}`) != undefined) {
       random_id = randomNumber(IP_mask_min, IP_mask_max);
     }
 
@@ -48,9 +51,9 @@ module.exports = function (app) {
     new_vpn_node.ip = `${private_ip_mask}${random_id}`;
     new_vpn_node.name = name;
     new_vpn_node.type = [type];
-    new_vpn_node.id = nanoid(10);
-    while (global.vpn_nodes.find(vpn_node => vpn_node.id === new_vpn_node.id)) {
-      new_vpn_node.id = nanoid(10);
+    new_vpn_node.id = nanoid();
+    while (vpn_nodes.find(vpn_node => vpn_node.id === new_vpn_node.id)) {
+      new_vpn_node.id = nanoid();
     }
 
     global.logger.info(`Random private VPN IP: ${new_vpn_node.ip}`);
@@ -67,8 +70,7 @@ module.exports = function (app) {
         return;
       }
 
-      global.vpn_nodes.push(new_vpn_node);
-      storage.save_config();
+      storage.add_vpn_node(new_vpn_node);
 
       global.logger.info(`A certificate for a new node is created.`);
 
@@ -119,10 +121,10 @@ module.exports = function (app) {
 
   //Get VPN nodes
   app.get('/vpn_node', async function (req, res) {
-
-    res.statusCode = 200;
-    res.end(JSON.stringify(global.vpn_nodes));
-
+      //Load services from DB and simplify the output format
+      let vpn_nodes = await storage.get_vpn_nodes();
+      res.statusCode = 200;
+      res.end(JSON.stringify(vpn_nodes));
   });
 
   app.get('/join_vpn/:archive_uuid', async function (req, res) {
@@ -148,10 +150,11 @@ module.exports = function (app) {
   });
 
 
-  //ToDo: See tasks
+  //ToDo: Find the way how to notify all other vpn nodes about deleted node
   app.delete('/vpn_node', async function (req, res) {
     const name = req.body.name;
-    if (global.vpn_nodes.find(node => node.name === name) != undefined) {
+    let vpn_nodes = storage.get_vpn_nodes();
+    if (vpn_nodes.find(node => node.name === name) != undefined) {
       res.statusCode = 403;
       res.end(JSON.stringify({ "msg": `The node with name ${name} not found.` }));
       return;

@@ -10,7 +10,6 @@ const storage = require("../utils/storage");
 const proxy = require("./proxy");
 const portfinder = require('portfinder');
 const gitlog = require("gitlog").default;
-const utils = require("../utils/utils");
 
 function create_restart_query() {
 
@@ -86,7 +85,7 @@ async function check_deployment_query() {
         service.environments.forEach((environment, index) => {
 
             //Get info about this server
-            let me_node = utils.get_vpn_node_info(global.service_node_config.server_id);
+            let me_node = storage.get_vpn_node_by_id(global.service_node_config.server_id);
 
             //Check if we should pull a container from the container registry and start it on this server
             //Note: Each server from the list environment->servers has the field "status", we check "status" inside a server not environment

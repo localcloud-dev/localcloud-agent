@@ -4,7 +4,8 @@
 */
 
 const storage = require("../utils/storage");
-const { nanoid } = require("nanoid");
+const { customAlphabet } = require("nanoid");
+const nanoid = customAlphabet('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz', 11); //~117 years or 1B IDs needed, in order to have a 1% probability of at least one collision, https://zelark.github.io/nano-id-cc/
 const proxy = require("./proxy");
 
 module.exports = function (app) {
@@ -23,9 +24,9 @@ module.exports = function (app) {
         if (saved_tunnel == undefined) {
             var new_tunnel = {};
 
-            new_tunnel.id = nanoid(10);
+            new_tunnel.id = nanoid();
             while (global.tunnels.find(tunnel => tunnel.id === new_tunnel.id)) {
-                new_tunnel.id = nanoid(10);
+                new_tunnel.id = nanoid();
             }
 
             new_tunnel.domain = domain;
