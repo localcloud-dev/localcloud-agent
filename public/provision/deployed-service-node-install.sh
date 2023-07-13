@@ -38,7 +38,7 @@ DEBIAN_FRONTEND=noninteractive sudo apt-get -y install iptables-persistent
 #Install npm & node.js
 curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash - 
 DEBIAN_FRONTEND=noninteractive sudo apt-get install -y nodejs
-sudo npm install -g npm@9.2.0
+sudo npm install -g npm
 
 #Install PM2
 sudo npm install pm2@latest -g

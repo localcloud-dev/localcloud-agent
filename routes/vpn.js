@@ -23,7 +23,7 @@ module.exports = function (app) {
     const name = req.body.name;
     const type = req.body.type; //possible values: server, local_machine
 
-    let vpn_nodes = storage.get_vpn_nodes();
+    let vpn_nodes = await storage.get_vpn_nodes();
     if (vpn_nodes.find(node => node.name === name) != undefined) {
       res.statusCode = 403;
       res.end(JSON.stringify({ "msg": `The node with name ${name} already exists. Use another name.` }));
