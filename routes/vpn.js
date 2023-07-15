@@ -61,7 +61,7 @@ module.exports = function (app) {
     //Note: we use id of a new node in parameter -name below because Nebula uses -name as id
     exec(`./nebula-cert sign -ca-crt /etc/nebula/ca.crt -ca-key /etc/nebula/ca.key -name \"${new_vpn_node.id}\" -ip \"${new_vpn_node.ip}\/24" -groups "devs" && sudo ufw allow from ${new_vpn_node.ip}`, {
       cwd: home_dir
-    }, function (err, stdout, stderr) {
+    }, async function (err, stdout, stderr) {
 
       if (err != null) {
         global.logger.error(`Cannot generate a certificate for a new node. Error: ${err}`);
@@ -70,7 +70,7 @@ module.exports = function (app) {
         return;
       }
 
-      storage.add_vpn_node(new_vpn_node);
+      await storage.add_vpn_node(new_vpn_node);
 
       global.logger.info(`A certificate for a new node is created.`);
 

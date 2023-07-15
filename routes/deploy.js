@@ -7,6 +7,8 @@ const storage = require("../utils/storage");
 const auth = require("../utils/auth");
 const fs = require('fs');
 const home_dir = `${require('os').homedir()}`;
+const { customAlphabet } = require("nanoid");
+const nanoid = customAlphabet('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz', 11); //~117 years or 1B IDs needed, in order to have a 1% probability of at least one collision, https://zelark.github.io/nano-id-cc/
 
 module.exports = function (app) {
 
@@ -47,7 +49,7 @@ module.exports = function (app) {
         res.end(JSON.stringify(credentials));
     });
 
-    function handle_bitbucket(req, res){
+    async function handle_bitbucket(req, res){
         if (req.body.repository == undefined) {
             res.statusCode = 403;
             res.end("");
@@ -61,13 +63,19 @@ module.exports = function (app) {
         console.log(repo_name + " " + updated_branch);
 
         //Update projects
-        let service = global.services.find(service => service.full_name === repo_full_name);
-        if (service != undefined) {
-            var environment = service.environments.find(environment => environment.branch === updated_branch);
+        //let service = global.services.find(service => service.full_name === repo_full_name);
+        console.log(`Searching for a service with full name: ${repo_full_name}`)
+        let services = await storage.get_service_by_fullname(repo_full_name);
+        if (services != undefined && services.length == 1) {
+            let service = services[0];
+            console.log(`Found service: ${JSON.stringify(service)}`);
+            console.log(`Create a new image record in DB`);
+            create_image(service, updated_branch);
+            /*var environment = service.environments.find(environment => environment.branch === updated_branch);
             if (environment != undefined) {
                 environment.status = "to_deploy";
                 storage.save_services();
-            }
+            }*/
         }
         res.statusCode = 200;
         res.end(JSON.stringify({}));
@@ -110,6 +118,10 @@ module.exports = function (app) {
         res.statusCode = 200;
         res.end(JSON.stringify({}));
 
+    }
+
+    function create_image(service, branch_name){
+        storage.add_image(service, branch_name);
     }
 
 }

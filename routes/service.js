@@ -7,6 +7,7 @@ const path = require('path');
 const storage = require("../utils/storage");
 const { customAlphabet } = require("nanoid");
 const nanoid = customAlphabet('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz', 11); //~117 years or 1B IDs needed, in order to have a 1% probability of at least one collision, https://zelark.github.io/nano-id-cc/
+const REGEXP_SPECIAL_CHAR = /[\!\#\$\%\^\&\*\)\(\+\=\.\<\>\{\}\[\]\:\;\'\"\|\~\`\_\-\/]/g;
 
 module.exports = function (app) {
 
@@ -42,8 +43,6 @@ module.exports = function (app) {
         //Check if we have a service with this name
         //If we have the user should send PUT /service to update the project
         //let saved_service = global.services.find(project => project.git_url === git_url);
-        const REGEXP_SPECIAL_CHAR =
-  /[\!\#\$\%\^\&\*\)\(\+\=\.\<\>\{\}\[\]\:\;\'\"\|\~\`\_\-]/g;
         
         let result = await global.redis_client.ft.search(
             'idx:services',

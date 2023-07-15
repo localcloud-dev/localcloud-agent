@@ -10,8 +10,6 @@ const app = polka();
 const { json } = require('body-parser');
 const cors = require('cors');
 
-const { nanoid } = require("nanoid");
-
 const crypto = require('crypto');
 const bcrypt = require('bcrypt');
 
@@ -20,8 +18,6 @@ const fs = require('fs');
 
 const auth = require("./utils/auth");
 const { execSync } = require('child_process');
-
-const utils = require("./utils/utils");
 
 app.use(cors());
 app.use(json());
@@ -54,8 +50,8 @@ function log_request(req, res, next) {
   logger.info(`=======================================`);
   logger.info(`~> Request: ${req.method} on ${req.url}`);
   if (req.body != undefined){
-    logger.info(`~> Body:`);
-    logger.info(`${JSON.stringify(req.body)}`);
+    //logger.info(`~> Body:`);
+    //logger.info(`${JSON.stringify(req.body)}`);
   }
   logger.info(`=======================================`);
 
@@ -92,7 +88,6 @@ app.use(log_request, authorize, add_response_headers);
 //Load config
 const redis_db = require('redis');
 global.service_node_config = {};
-global.vpn_nodes = [];
 
 connect_redis();
 async function connect_redis() {
@@ -106,13 +101,34 @@ async function connect_redis() {
 
   //Create Redis Indexes
   try {
-    await global.redis_client.ft.create('idx:services', {
+    await global.redis_client.ft.create('idx:vpnnodes', {
       name: redis_db.SchemaFieldTypes.TAG,
       id: redis_db.SchemaFieldTypes.TEXT,
     }, {
-        ON: 'JSON',
-        PREFIX: 'service:',
+        ON: 'HASH',
+        PREFIX: 'vpnnode',
     });
+  
+  } catch (e) {
+    if (e.message === 'Index already exists') {
+        console.log('Index exists already, skipped creation.');
+    } else {
+        // Something went wrong, perhaps RediSearch isn't installed...
+        console.error(e);
+        process.exit(1);
+    }
+  }
+  
+  try {
+    await global.redis_client.ft.create('idx:services', {
+      name: redis_db.SchemaFieldTypes.TAG,
+      full_name: redis_db.SchemaFieldTypes.TAG,
+      id: redis_db.SchemaFieldTypes.TEXT,
+    }, {
+        ON: 'HASH',
+        PREFIX: 'service',
+    });
+
 } catch (e) {
     if (e.message === 'Index already exists') {
         console.log('Index exists already, skipped creation.');
@@ -121,6 +137,25 @@ async function connect_redis() {
         console.error(e);
         process.exit(1);
     }
+}
+
+try {
+  await global.redis_client.ft.create('idx:images', {
+    status: redis_db.SchemaFieldTypes.TAG,
+    id: redis_db.SchemaFieldTypes.TEXT,
+  }, {
+      ON: 'HASH',
+      PREFIX: 'image',
+  });
+
+} catch (e) {
+  if (e.message === 'Index already exists') {
+      console.log('Index exists already, skipped creation.');
+  } else {
+      // Something went wrong, perhaps RediSearch isn't installed...
+      console.error(e);
+      process.exit(1);
+  }
 }
 
   //await client.set('key', 'value');
@@ -150,40 +185,35 @@ async function connect_redis() {
   }
 
   //Load data about this node from host.crt file
-  var node_info = null;
+  var vpn_node_info = {};
   try {
     let node_info_out = execSync('./nebula-cert print -json -path /etc/nebula/host.crt', { cwd: home_dir });
-    node_info = JSON.parse(node_info_out.toString()).details;
+    vpn_node_info = JSON.parse(node_info_out.toString()).details;
     global.logger.info('Loaded VPN node info from crt:');
     global.logger.info(node_info_out.toString());
 
     //Nebula uses names as server ids that's why we use nebula's node name as a server id
-    global.service_node_config.server_id = node_info.name;
+    global.service_node_config.server_id = vpn_node_info.name;
 
   } catch (err) {
     global.logger.error(`Cannot load information about this node from host.crt. Error: ${err}`);
+    return;
    }
 
   //Load VPN nodes
-  const vpn_nodes = await global.redis_client.get('vpn_nodes');
-  if (vpn_nodes != undefined) {
-    global.vpn_nodes = JSON.parse(vpn_nodes);
-    global.logger.info('Loaded VPN nodes');
-    global.logger.info(global.vpn_nodes);
-  } else {
-    global.logger.info('No stored VPN nodes found');
-    global.vpn_nodes = [];
+  const vpn_nodes = await storage.get_vpn_nodes();// global.redis_client.get('vpn_nodes');
+  if (vpn_nodes.length == 0) {
+
+    global.logger.info('No stored VPN nodes in DB found. Seams this is the first node in VPN. Creating a first record...');
 
     //We should add the first server to vpn nodes that we just provisioned
     //Now the first server in VPN (or the first node) has a predefined private IP - 192.168.202.1
     var new_vpn_node = {};
-    new_vpn_node.ip = node_info.ips[0];
+    new_vpn_node.ip = vpn_node_info.ips[0];
     new_vpn_node.name = "load_balancer_1";
     new_vpn_node.type = ["load_balancer", "build_machine", "server"];
     new_vpn_node.id = global.service_node_config.server_id; // this is the first node - we shouldn't check that id is unique here
-
-    global.vpn_nodes.push(new_vpn_node);
-    storage.save_config();
+    await storage.add_vpn_node(new_vpn_node);
 
   }
 
@@ -237,7 +267,7 @@ async function connect_redis() {
   require("./routes/environment")(app);
 
   console.log("============================================");
-  console.log(utils.get_vpn_node_info(global.service_node_config.server_id));
+  console.log(await storage.get_vpn_node_by_id(global.service_node_config.server_id));
   console.log("============================================");
 
   //Check if service-node works
@@ -253,7 +283,7 @@ async function connect_redis() {
 
 }
 
-
+//ToDo: rewrite api token logic, now all requests are protected by overlay network
 async function generate_deploy_api_token() {
 
   //Lets create a new API KEY
