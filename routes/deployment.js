@@ -62,14 +62,15 @@ async function check_deployment_query() {
 
     //Get info about this server
     let vpn_nodes = await storage.get_vpn_node_by_id(global.service_node_config.server_id);
-    if (vpn_nodes.length > 0){
+    if (vpn_nodes.length > 0) {
         //Check if there are images to be built
         check_build_image(vpn_nodes[0]);
+
+        //Check if there are any containers that should be deployed on this server
+        check_deploy_container(vpn_nodes[0]);
     }
 
     return;
-
-
     //Reload services and apps from redis
     /*const services = await global.redis_client.get('services');
     if (services != undefined) {
@@ -354,13 +355,14 @@ async function check_deployment_query() {
             //Get Image records with status == "to_do"
             let images = await storage.get_images_by_status("to_do");
             if (images.length > 0) {
-
                 let image = images[0];
                 const image_id = image.id;
-                await storage.update_image_status(image.id, "in_progress");
                 const git_url = image.git_url;
-                const branch = image.branch_name;
+                const branch = JSON.parse(image.environment).branch;
                 const repository_name = `${crypto.randomUUID()}`;
+                global.logger.info(`Found a new image to build: ${git_url}, branch:${branch}`);
+
+                await storage.update_image_status(image.id, "in_progress");
 
                 //Clone the repository
                 global.logger.info(`Cloning the repository:`);
@@ -463,7 +465,76 @@ async function check_deployment_query() {
         }
     }
 
+    async function check_deploy_container(me_node) {
+        //Check if we should pull a container from the container registry and start it on this server
+        //Check if there containers with status to_do and target_id == id of this server
+        let conatainers_to_do = await storage.get_containers_by_status_and_target_id("to_do", me_node.id);
+        let conatainers_in_progress = await storage.get_containers_by_status_and_target_id("in_progress", me_node.id);
+
+        if (conatainers_in_progress.length == 0 && conatainers_to_do.length > 0) {
+            conatainers_to_do.forEach(async (container) => {
+                //Check if image is built and pushed to container registry
+                let image_id = container.image_id;
+                let images = await storage.get_image_by_id(image_id);
+
+                if (images.length > 0 && images[0].status == "done") {
+                    let image = images[0];
+                    let environment = JSON.parse(image.environment);
+                    await storage.update_container_status(container.id, "in_progress");
+
+                    global.logger.info(`Deploying on server: ${me_node.id}: ${me_node.ip}`);
+                    //Pull a container from a container registry
+                    //We set --tls-verify=false because we push to localhost
+                    //Also all traffic between servers within VPN is encrypted
+                    global.logger.info(`Pulling a container: ${image_id}`);
+                    exec(`podman image pull 192.168.202.1:7000/${image_id} --tls-verify=false`, {
+                        cwd: `${homedir}`
+                    }, function (err, stdout, stderr) {
+                        global.logger.info(`podman pull output: ${stdout}, error output: ${stderr}`);
+
+                        if (err == undefined || err == null) {
+                            global.logger.info(`Image ${image_id} has been pulled from the container registry`);
+                            run_container(environment.port, image_id, container);
+                        }
+                    });
+                }
+            })
+        }
+    }
+
+    async function run_container(service_port, image_id, container) {
+        //Getting a free port and starting a container
+        portfinder.getPort({
+            port: 6000,    // minimum port
+            stopPort: 8900 // maximum port
+        }, function (err, available_port) {
+            if (err != null) {
+                global.logger.error(`Cannot get a free port: ${err}`);
+                return false;
+            }
+            global.logger.info(`A free port has ben found: ${available_port}`);
+            global.logger.info(`Running a command: podman run -p ${available_port}:${service_port} -d ${image_id} --name ${image_id}`);
+
+            exec(`podman container run -p ${available_port}:${service_port} -d --name ${image_id} ${image_id}`, {
+                cwd: `${homedir}`
+            }, async function (err, stdout, stderr) {
+                global.logger.info(`podman run output: ${stdout}, error output: ${stderr}`);
+
+                if (err == undefined || err == null) {
+                    global.logger.info(`Container ${image_id} has been started`);
+                    await storage.update_container_status(container.id, "done");
+
+                    //Reload Proxy Server
+                    //proxy.proxy_reload();
+                    //environment.status = "deployed";
+                    //storage.save_services();
+                    return true;
+                } else {
+                    return false
+                }
+            });
+        });
+    }
 }
 
 module.exports = { check_deployment_query, create_restart_query }
-

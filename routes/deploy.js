@@ -67,8 +67,8 @@ module.exports = function (app) {
         if (services != undefined && services.length == 1) {
             let service = services[0];
             console.log(`Found service: ${JSON.stringify(service)}`);
-            console.log(`Create a new image record in DB`);
-            create_image(service, updated_branch);
+            var environment = JSON.parse(service.environments).find(environment => environment.branch === updated_branch);
+            create_image_and_containers(service, environment);
             /*var environment = service.environments.find(environment => environment.branch === updated_branch);
             if (environment != undefined) {
                 environment.status = "to_deploy";
@@ -118,8 +118,13 @@ module.exports = function (app) {
 
     }
 
-    function create_image(service, branch_name){
-        storage.add_image(service, branch_name);
+    async function create_image_and_containers(service, environment){
+        console.log(`Create a new image record in DB`);
+        let image_id = await storage.add_image(service, environment);
+        environment.servers.forEach(async (server) => {
+            console.log(`Create a new container record in DB`);
+            await storage.add_container(image_id, server.id)
+        });
     }
 
 }

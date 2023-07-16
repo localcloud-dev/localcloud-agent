@@ -88,16 +88,16 @@ async function get_vpn_node_by_id(node_id){
 }
 
 //Image Records
-async function add_image(service, branch_name){
+async function add_image(service, environment){
     let image_id = nanoid();
     await global.redis_client.hSet(`image:${image_id}`, {
         id: image_id,
         service_id: service.id,
-        branch_name: branch_name,
-        env_id: branch_name, //now we set env_id as branch_name, will be chnged later 
+        environment: JSON.stringify(environment),
         git_url: service.git_url,
         status: "to_do"
     })
+    return image_id;
 }
 
 async function get_images(){
@@ -106,6 +106,15 @@ async function get_images(){
         `*`
     );
 
+    //Simplify the output format
+    return simplify_format(results.documents);
+}
+
+async function get_image_by_id(image_id){   
+    let results = await global.redis_client.ft.search(
+        'idx:images',
+        `@id: /${image_id}/`
+    );
     //Simplify the output format
     return simplify_format(results.documents);
 }
@@ -122,6 +131,53 @@ async function get_images_by_status(status){
 
 async function update_image_status(image_id, status){
     await global.redis_client.hSet(`image:${image_id}`, {
+        status: status
+    })
+}
+
+//Container Records
+async function add_container(image_id, target_server_id){
+    let container_id = nanoid();
+    await global.redis_client.hSet(`container:${container_id}`, {
+        id: container_id,
+        image_id: image_id,
+        target: target_server_id,
+        status: "to_do"
+    })
+}
+
+async function get_containers(){
+    let results = await global.redis_client.ft.search(
+        `idx:containers`,
+        `*`
+    );
+
+    //Simplify the output format
+    return simplify_format(results.documents);
+}
+
+async function get_containers_by_status(status){
+    let results = await global.redis_client.ft.search(
+        'idx:containers',
+        `@status: {${status.replace(REGEXP_SPECIAL_CHAR, '\\$&')}}`
+    ); 
+
+    //Simplify the output format
+    return simplify_format(results.documents);
+}
+
+async function get_containers_by_status_and_target_id(status, target_id){
+    let results = await global.redis_client.ft.search(
+        'idx:containers',
+        `@status: {${status.replace(REGEXP_SPECIAL_CHAR, '\\$&')}} @target: {${target_id.replace(REGEXP_SPECIAL_CHAR, '\\$&')}}`
+    ); 
+
+    //Simplify the output format
+    return simplify_format(results.documents);
+}
+
+async function update_container_status(container_id, status){
+    await global.redis_client.hSet(`container:${container_id}`, {
         status: status
     })
 }
@@ -159,5 +215,5 @@ function simplify_format(documents){
     return services;
 }
 
-module.exports = {save_services, save_tunnels, save_config, add_service, get_services, get_service_by_id, get_service_by_fullname, remove_service_by_id, add_vpn_node, get_vpn_nodes, get_vpn_node_by_id, add_image, get_images, get_images_by_status, update_image_status}
+module.exports = {add_container, get_containers, get_containers_by_status, get_containers_by_status_and_target_id, update_container_status, save_services, save_tunnels, save_config, add_service, get_services, get_service_by_id, get_service_by_fullname, remove_service_by_id, add_vpn_node, get_vpn_nodes, get_vpn_node_by_id, add_image, get_image_by_id, get_images, get_images_by_status, update_image_status}
 

@@ -22,15 +22,18 @@ const { execSync } = require('child_process');
 app.use(cors());
 app.use(json());
 
-const { format, createLogger, transports } = require("winston");
-const { combine, timestamp, label, printf, prettyPrint } = format;
+//Create logger
+const { createLogger, format, transports } = require('winston');
+const { combine, timestamp, label, printf } = format;
+
+const logger_format = printf(({ level, message, label, timestamp }) => {
+  return `${timestamp}: ${level}: ${message}`;
+});
 
 const logger = createLogger({
-  level: 'info',
   format: combine(
-    timestamp({
-      format: "MMM-DD-YYYY HH:mm:ss",
-    })
+    timestamp(),
+    logger_format
   ),
   transports: [
     //
@@ -40,7 +43,7 @@ const logger = createLogger({
     new transports.Console(),
     new transports.File({ filename: 'error.log', level: 'error' }),
     new transports.File({ filename: 'info.log' }),
-  ],
+  ]
 });
 global.logger = logger;
 
@@ -157,6 +160,26 @@ try {
   }
 }
 
+try {
+  await global.redis_client.ft.create('idx:containers', {
+    status: redis_db.SchemaFieldTypes.TAG,
+    target: redis_db.SchemaFieldTypes.TAG,
+    id: redis_db.SchemaFieldTypes.TEXT,
+  }, {
+      ON: 'HASH',
+      PREFIX: 'container',
+  });
+
+} catch (e) {
+  if (e.message === 'Index already exists') {
+      console.log('Index exists already, skipped creation.');
+  } else {
+      // Something went wrong, perhaps RediSearch isn't installed...
+      console.error(e);
+      process.exit(1);
+  }
+}
+
   //await client.set('key', 'value');
   /*const service_node_config = await global.redis_client.get('service_node_config');
   if (service_node_config != undefined) {
@@ -245,6 +268,13 @@ try {
   global.service_node_config.port = process.env.PORT || 5005;
   global.service_node_config.domain = process.env.SERVICE_NODE_DOMAIN; // We set this in deployed-service-node-install.sh script
 
+  //Routes
+  require("./routes/service")(app);
+  require("./routes/tunnel")(app);
+  require("./routes/deploy")(app);
+  require("./routes/vpn")(app);
+  require("./routes/environment")(app);
+
   //Create routes
   const deployment = require("./routes/deployment");
   setInterval(deployment.check_deployment_query, 5000);
@@ -257,13 +287,6 @@ try {
   if (global.service_node_config.domain != undefined) {
     proxy.proxy_reload();
   }
-
-  //Routes
-  require("./routes/service")(app);
-  require("./routes/tunnel")(app);
-  require("./routes/deploy")(app);
-  require("./routes/vpn")(app);
-  require("./routes/environment")(app);
 
   console.log("============================================");
   console.log(await storage.get_vpn_node_by_id(global.service_node_config.server_id));
