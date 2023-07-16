@@ -60,16 +60,16 @@ function create_restart_query() {
 
 async function check_deployment_query() {
 
-
     //Get info about this server
-    let me_node = storage.get_vpn_node_by_id(global.service_node_config.server_id);
-
-    //Check if there are images to be built
-    check_build_image(me_node);
+    let vpn_nodes = await storage.get_vpn_node_by_id(global.service_node_config.server_id);
+    if (vpn_nodes.length > 0){
+        //Check if there are images to be built
+        check_build_image(vpn_nodes[0]);
+    }
 
     return;
 
-    
+
     //Reload services and apps from redis
     /*const services = await global.redis_client.get('services');
     if (services != undefined) {
@@ -347,9 +347,9 @@ async function check_deployment_query() {
         });
     });
 
-    async function check_build_image() {
+    async function check_build_image(me_node) {
         //Note: We build images only on servers with "build_machine" type
-        if (me_node.type.indexOf("build_machine") != -1) {
+        if (JSON.parse(me_node.type).indexOf("build_machine") != -1) {
 
             //Get Image records with status == "to_do"
             let images = await storage.get_images_by_status("to_do");

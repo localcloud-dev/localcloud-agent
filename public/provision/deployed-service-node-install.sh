@@ -56,7 +56,7 @@ curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' | sudo 
 sudo apt update
 sudo DEBIAN_FRONTEND=noninteractive sudo apt -y install caddy
 
-#Clone Deployed.cc service-node
+#Clone LocalCloud service-node
 git clone https://coded-sh@bitbucket.org/coded-sh/service-node.git 
 
 #Install Nebula
@@ -174,7 +174,7 @@ sudo pm2 startup
 sudo pm2 save
 
 if [ "$1" = "join" ]; then
-    echo "Deployed.cc Service Node agent is installed. Use CLI to deploy services and apps on this server. This server will should be listed in Servers menu item in CLI."
+    echo "LocalCloud agent is installed. Use CLI to deploy services and apps on this server. This server will should be listed in Servers menu item in CLI."
 else
 
     #Start Podman container registry, in the current version the first server/root server is a build machine as well
@@ -208,7 +208,7 @@ else
     echo ""
     echo "Note: If you see a message like 'command not found: deploy' try to install Deployed CLI with sudo: 'sudo npm install -g https://github.com/localcloud-dev/localcloud-cli'"
     echo ""
-    echo "- connect your local machine to Deployed.cc VPN (this server is already in this network). Run in Terminal/Console on your local machine:"
+    echo "- connect your local machine to your LocalCloud VPN (this server is already in this network). Run in Terminal/Console on your local machine:"
     echo ""
     echo "    sudo deploy -j $zip_url"
     echo ""

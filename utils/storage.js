@@ -2,6 +2,9 @@ const fs = require('fs');
 const REGEXP_SPECIAL_CHAR =
 /[\!\#\$\%\^\&\*\)\(\+\=\.\<\>\{\}\[\]\:\;\'\"\|\~\`\_\-\/]/g;
 
+const { customAlphabet } = require("nanoid");
+const nanoid = customAlphabet('0123456789abcdefghijklmnopqrstuvwxyz', 13); //~211 years or 1B IDs needed, in order to have a 1% probability of at least one collision, https://zelark.github.io/nano-id-cc/
+
 //ToDo: replace with update_service(service_id)
 function save_services(){
     global.redis_client.set('services', JSON.stringify(global.services));
@@ -86,6 +89,7 @@ async function get_vpn_node_by_id(node_id){
 
 //Image Records
 async function add_image(service, branch_name){
+    let image_id = nanoid();
     await global.redis_client.hSet(`image:${image_id}`, {
         id: image_id,
         service_id: service.id,
@@ -108,7 +112,7 @@ async function get_images(){
 
 async function get_images_by_status(status){
     let results = await global.redis_client.ft.search(
-        'idx:services',
+        'idx:images',
         `@status: {${status.replace(REGEXP_SPECIAL_CHAR, '\\$&')}}`
     ); 
 

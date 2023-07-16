@@ -30,8 +30,7 @@ const logger = createLogger({
   format: combine(
     timestamp({
       format: "MMM-DD-YYYY HH:mm:ss",
-    }),
-    prettyPrint()
+    })
   ),
   transports: [
     //
@@ -278,7 +277,7 @@ try {
 
   app.listen(global.service_node_config.port, err => {
     if (err) throw err;
-    global.logger.info(`Deployed.cc service node is running on port ${global.service_node_config.port}`);
+    global.logger.info(`LocalCloud agent is running on port ${global.service_node_config.port}`);
   });
 
 }

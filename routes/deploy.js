@@ -7,8 +7,6 @@ const storage = require("../utils/storage");
 const auth = require("../utils/auth");
 const fs = require('fs');
 const home_dir = `${require('os').homedir()}`;
-const { customAlphabet } = require("nanoid");
-const nanoid = customAlphabet('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz', 11); //~117 years or 1B IDs needed, in order to have a 1% probability of at least one collision, https://zelark.github.io/nano-id-cc/
 
 module.exports = function (app) {
 

@@ -29,7 +29,7 @@ module.exports = function (app) {
         }
 
         if (index == -1){
-            //Deployed.cc doesn't support this Git server
+            //LocalCloud doesn't support this Git server
             global.logger.error(`Git repository on: ${git_url} isn't supported yet.`);
 
             res.statusCode = 409;

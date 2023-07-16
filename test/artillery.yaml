@@ -1,5 +1,5 @@
 config:
-  target: "https://agent.service.deployed.cc"
+  target: "https://yourdomain.com"
   phases:
     - duration: 600
       arrivalRate: 100
