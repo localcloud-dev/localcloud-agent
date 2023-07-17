@@ -39,7 +39,7 @@ module.exports = function (app) {
             storage.save_tunnels();
 
             //Reload Proxy Server
-            proxy.proxy_reload();
+            //proxy.proxy_reload();
 
             global.logger.info(`New tunnel added:`);
             global.logger.info(`${JSON.stringify(new_tunnel)}`);
@@ -69,7 +69,7 @@ module.exports = function (app) {
         storage.save_tunnels();
 
         //Reload Proxy Server
-        proxy.proxy_reload();
+        //proxy.proxy_reload();
 
         global.logger.info(`Tunnel: ${tunnel_id} has been removed`);
         res.statusCode = 200;

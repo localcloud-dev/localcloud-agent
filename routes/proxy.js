@@ -6,8 +6,27 @@
 const exec = require('child_process').exec;
 const fs = require('fs');
 const homedir = require('os').homedir();
+const caddyfile_path = `${homedir}/Caddyfile`;
+const storage = require("../utils/storage");
 
-function proxy_reload() {
+async function proxy_reload() {
+    //We update proxy configuration file and reload it in 2 cases
+    //- there is no a configuration file yet
+    //- there are Proxy records in DB with status == "to_do"
+    if (fs.existsSync(caddyfile_path) == false) {
+        update_proxy_config();
+    } else {
+        //Get Proxy records with status == "to_do"
+        let proxies = await storage.get_proxies_by_status("to_do");
+        if (proxies.length > 0) {
+            let proxy = proxies[0];
+            await storage.update_proxy_status(proxy.id, "done");
+            update_proxy_config();
+        }
+    }
+}
+
+async function update_proxy_config() {
     global.logger.info(`Updating proxy server configuration ...`);
 
     //1. Fill service-node proxy configuration
@@ -30,18 +49,19 @@ function proxy_reload() {
 }
 `;
 
-//Fill services
-    global.services.forEach((service, index) => {
-        service.environments.forEach((environment, index) => {
+    //Fill services
+    let proxies = await storage.get_proxies_by_status("done");
+    if (proxies.length > 0) {
+        proxies.forEach((proxy) => {
             caddy_file += `
-${environment.domain} {
-    reverse_proxy * localhost:${environment.exposed_ports[0]}
+${proxy.domain} {
+    reverse_proxy * ${proxy.vpn_ip.split('/')[0]}:${proxy.port}
 }
 `;
         });
-    });
+    }
 
-//Fill tunnels
+    //ToDo: Fill tunnels
     global.tunnels.forEach((tunnel, index) => {
         caddy_file += `
 ${tunnel.domain} {
@@ -50,7 +70,7 @@ ${tunnel.domain} {
 `;
     });
 
-    fs.writeFile(`${homedir}/Caddyfile`, caddy_file, err => {
+    fs.writeFile(caddyfile_path, caddy_file, err => {
         if (err) {
             global.logger.error(err);
             global.logger.info(`Cannot save a proxy configuration file:`);

@@ -357,12 +357,12 @@ async function check_deployment_query() {
             if (images.length > 0) {
                 let image = images[0];
                 const image_id = image.id;
+                await storage.update_image_status(image_id, "in_progress");
+
                 const git_url = image.git_url;
                 const branch = JSON.parse(image.environment).branch;
                 const repository_name = `${crypto.randomUUID()}`;
                 global.logger.info(`Found a new image to build: ${git_url}, branch:${branch}`);
-
-                await storage.update_image_status(image.id, "in_progress");
 
                 //Clone the repository
                 global.logger.info(`Cloning the repository:`);
@@ -494,7 +494,7 @@ async function check_deployment_query() {
 
                         if (err == undefined || err == null) {
                             global.logger.info(`Image ${image_id} has been pulled from the container registry`);
-                            run_container(environment.port, image_id, container);
+                            run_container(environment.port, image_id, container, me_node, environment);
                         }
                     });
                 }
@@ -502,7 +502,7 @@ async function check_deployment_query() {
         }
     }
 
-    async function run_container(service_port, image_id, container) {
+    async function run_container(service_port, image_id, container, me_node, environment) {
         //Getting a free port and starting a container
         portfinder.getPort({
             port: 6000,    // minimum port
@@ -521,13 +521,11 @@ async function check_deployment_query() {
                 global.logger.info(`podman run output: ${stdout}, error output: ${stderr}`);
 
                 if (err == undefined || err == null) {
+
                     global.logger.info(`Container ${image_id} has been started`);
                     await storage.update_container_status(container.id, "done");
+                    await storage.add_proxy(me_node.ip, available_port, environment.domain, container.id );
 
-                    //Reload Proxy Server
-                    //proxy.proxy_reload();
-                    //environment.status = "deployed";
-                    //storage.save_services();
                     return true;
                 } else {
                     return false

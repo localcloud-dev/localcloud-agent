@@ -180,6 +180,25 @@ try {
   }
 }
 
+try {
+  await global.redis_client.ft.create('idx:proxies', {
+    status: redis_db.SchemaFieldTypes.TAG,
+    id: redis_db.SchemaFieldTypes.TEXT,
+  }, {
+      ON: 'HASH',
+      PREFIX: 'proxy',
+  });
+
+} catch (e) {
+  if (e.message === 'Index already exists') {
+      console.log('Index exists already, skipped creation.');
+  } else {
+      // Something went wrong, perhaps RediSearch isn't installed...
+      console.error(e);
+      process.exit(1);
+  }
+}
+
   //await client.set('key', 'value');
   /*const service_node_config = await global.redis_client.get('service_node_config');
   if (service_node_config != undefined) {
@@ -223,7 +242,8 @@ try {
    }
 
   //Load VPN nodes
-  const vpn_nodes = await storage.get_vpn_nodes();// global.redis_client.get('vpn_nodes');
+  var vpn_nodes = await storage.get_vpn_node_by_id(global.service_node_config.server_id);
+
   if (vpn_nodes.length == 0) {
 
     global.logger.info('No stored VPN nodes in DB found. Seams this is the first node in VPN. Creating a first record...');
@@ -231,12 +251,14 @@ try {
     //We should add the first server to vpn nodes that we just provisioned
     //Now the first server in VPN (or the first node) has a predefined private IP - 192.168.202.1
     var new_vpn_node = {};
-    new_vpn_node.ip = vpn_node_info.ips[0];
+    new_vpn_node.ip = vpn_node_info.ips[0].split('/')[0]; // remove subnet mask
     new_vpn_node.name = "load_balancer_1";
     new_vpn_node.type = ["load_balancer", "build_machine", "server"];
     new_vpn_node.id = global.service_node_config.server_id; // this is the first node - we shouldn't check that id is unique here
     await storage.add_vpn_node(new_vpn_node);
 
+    //Load info about this server again
+    vpn_nodes = await storage.get_vpn_node_by_id(global.service_node_config.server_id);
   }
 
   //Load Services
@@ -283,10 +305,10 @@ try {
   //Load other modules
   const proxy = require("./routes/proxy");
   //ToDo: Only load balancers and build machines can have public domains
-  //Now we just check if we set in env variable a public domain during start or not
-  if (global.service_node_config.domain != undefined) {
-    proxy.proxy_reload();
+  if (vpn_nodes.length > 0 && (vpn_nodes[0].type.includes("load_balancer") == true || vpn_nodes[0].type.indexOf("build_machine") == true)) {
+    setInterval(proxy.proxy_reload, 2000);
   }
+
 
   console.log("============================================");
   console.log(await storage.get_vpn_node_by_id(global.service_node_config.server_id));
