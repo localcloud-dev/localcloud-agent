@@ -10,6 +10,7 @@ const storage = require("../utils/storage");
 const proxy = require("./proxy");
 const portfinder = require('portfinder');
 const gitlog = require("gitlog").default;
+const request = require('superagent');
 
 function create_restart_query() {
 
@@ -523,9 +524,20 @@ async function check_deployment_query() {
                 if (err == undefined || err == null) {
 
                     global.logger.info(`Container ${image_id} has been started`);
-                    await storage.update_container_status(container.id, "done");
-                    await storage.add_proxy(me_node.ip, available_port, environment.domain, container.id );
 
+                    //Send a message to a root node (now it's the first deployed server in VPN) that container is started and proxy server can be updated with new domain
+                    //ToDo: Replace fixed IP address of a first server with some domain name
+
+                    request
+                    .post(`http://192.168.202.1:5005/proxy`)
+                    .send({ container_id: container.id, workload_ip:me_node.ip, port:available_port, domain: environment.domain}) // sends a JSON post body
+                    .set('accept', 'json')
+                    .retry(150)
+                    .end(function (err, res) {
+                        // Calling the end function will send the request
+                        console.log(`\nMessage to create a new proxy for container: ${container.id}, domain: ${environment.domain} is delivered.\n`);
+                    });
+                    
                     return true;
                 } else {
                     return false

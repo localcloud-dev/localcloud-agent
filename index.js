@@ -304,6 +304,8 @@ try {
 
   //Load other modules
   const proxy = require("./routes/proxy");
+  proxy.create_routes(app);
+  
   //ToDo: Only load balancers and build machines can have public domains
   if (vpn_nodes.length > 0 && (vpn_nodes[0].type.includes("load_balancer") == true || vpn_nodes[0].type.indexOf("build_machine") == true)) {
     setInterval(proxy.proxy_reload, 2000);

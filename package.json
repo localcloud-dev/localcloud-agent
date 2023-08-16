@@ -1,6 +1,6 @@
 {
   "name": "service-node",
-  "version": "1.0.0",
+  "version": "0.5.0",
   "description": "",
   "main": "index.js",
   "scripts": {
@@ -19,6 +19,7 @@
     "polka": "^0.5.2",
     "portfinder": "^1.0.32",
     "redis": "^4.6.5",
+    "superagent": "^8.1.2",
     "winston": "^3.8.2"
   }
 }

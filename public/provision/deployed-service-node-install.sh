@@ -106,11 +106,19 @@ if [ "$1" = "join" ]; then
     #Use Redis instance as a replica
     sudo echo -e "\nreplica-read-only no\nreplicaof 192.168.202.1 6379" >> /etc/redis-stack.conf
     sudo systemctl restart redis-stack-server
+    
+    #Waiting for Redis
+    PONG=`redis-cli -h 127.0.0.1 -p 6379 ping | grep PONG`
+    while [ -z "$PONG" ]; do
+        sleep 1
+        echo "Retry Redis ping... "
+        PONG=`redis-cli -h 127.0.0.1 -p 6379 ping | grep PONG`
+    done
 
     #Wait until this Redis replica is synchronized with the master, we check if a replica is synchronized by "vpn_nodes" key
     echo "Redis replica synchronization"
-    timeout 15 bash -c 'while [[ "$(redis-cli exists vpn_nodes)" != "1" ]]; do sleep 1; done' || false
-    if [ "$(redis-cli exists vpn_nodes)" != "1" ]; then
+    timeout 15 bash -c 'while [[ "$(redis-cli dbsize)" == "0" ]]; do sleep 1; done' || false
+    if [[ "$(redis-cli dbsize)" == "0" ]]; then
         echo "Cannot synchronize Redis replica with the master. Try to rebuild this server, add a new node in Deploy CLI and run this script again."
         exit 1
     else
@@ -128,7 +136,7 @@ else
     echo "Generate new Nebula certificates"
     sudo chmod +x nebula-cert
 
-    server_ip="$(curl ifconfig.me)"
+    server_ip="$(curl https://ipinfo.io/ip)"
     UUID=$(openssl rand -hex 5)
 
     sudo ./nebula-cert ca -name "Local Cloud" -duration 34531h

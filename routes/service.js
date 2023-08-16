@@ -48,9 +48,7 @@ module.exports = function (app) {
             'idx:services',
             `@name: {${repository_name.replace(REGEXP_SPECIAL_CHAR, '\\$&')}}`
         );
-        
-        console.log(JSON.stringify(result, null, 2));
-        
+                
         if (result.total == 0) {
             var new_service = {};
 

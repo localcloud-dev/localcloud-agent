@@ -9,6 +9,29 @@ const homedir = require('os').homedir();
 const caddyfile_path = `${homedir}/Caddyfile`;
 const storage = require("../utils/storage");
 
+async function create_routes(app) {
+
+    //Add new proxy DB record
+    app.post('/proxy', async function (req, res) {
+
+        global.logger.info(`Adding a new Proxy record`);
+
+        const container_id = req.body.container_id;
+        const workload_ip = req.body.workload_ip;
+        const port = req.body.port;
+        const domain = req.body.domain;
+        global.logger.info(`container_id:${container_id} workload_ip:${workload_ip} port:${port} domain:${domain}`);
+
+        await storage.update_container_status(container_id, "done");
+        await storage.add_proxy(workload_ip, port, domain, container_id );
+
+        res.statusCode = 201;
+        res.end(JSON.stringify({}));
+
+    });
+
+}
+
 async function proxy_reload() {
     //We update proxy configuration file and reload it in 2 cases
     //- there is no a configuration file yet
@@ -85,4 +108,4 @@ ${tunnel.domain} {
     });
 };
 
-module.exports = { proxy_reload };
+module.exports = { proxy_reload, create_routes };
