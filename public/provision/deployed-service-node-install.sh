@@ -181,6 +181,9 @@ timeout 10 bash -c 'while [[ "$(curl -s -o /dev/null -w ''%{http_code}'' localho
 sudo pm2 startup
 sudo pm2 save
 
+#Install LocalCloud CLI
+npm install -g https://github.com/localcloud-dev/localcloud-cli
+
 if [ "$1" = "join" ]; then
     echo "LocalCloud agent is installed. Use CLI to deploy services and apps on this server. This server will should be listed in Servers menu item in CLI."
 else
@@ -196,40 +199,14 @@ else
     systemctl enable depl-registry
     systemctl start depl-registry
 
-    #Generate VPN certificates for the first local machine with full access
-    #    .---------- constant part!
-    #    vvvv vvvv-- the code from above
-    GREEN='\033[0;32m'
-    NC='\033[0m' # No Color
-    zip_url=$(curl -s -d '{"name":"local_machine","type":"local_machine"}' -H "Content-Type: application/json" -X POST http://localhost:5005/vpn_node | python3 -c "import sys,json;obj=json.load(sys.stdin);print(obj['zip_url']);")
-    echo "${GREEN}+---------------------------------------+${NC}"
     echo ""
-    echo "Service Node Agent has been installed. To deploy a first project:"
     echo ""
-    echo "- install Deploy CLI on your local machine (on your laptop, iMac, Desktop computer etc.). Run in Terminal/Console (NPM should be installed on your system):"
+    echo "LocalCloud agent is installed. Use LocalCloud CLI to manage servers, local machines, services, apps, deployments and localhost tunnels. Check localcloud.dev/docs/cli for more information."
     echo ""
-    echo "    npm install -g https://github.com/localcloud-dev/localcloud-cli"
+    echo "To run LocalCloud CLI:"
     echo ""
-    echo "- check that Deployed CLI is installed:"
+    echo "      localcloud"
     echo ""
-    echo "    deploy -v"
-    echo ""
-    echo "Note: If you see a message like 'command not found: deploy' try to install Deployed CLI with sudo: 'sudo npm install -g https://github.com/localcloud-dev/localcloud-cli'"
-    echo ""
-    echo "- connect your local machine to your LocalCloud VPN (this server is already in this network). Run in Terminal/Console on your local machine:"
-    echo ""
-    echo "    sudo deploy -j $zip_url"
-    echo ""
-    echo "If everything goes well you'll see menu:"
-    echo ""
-    echo "    - Add service"
-    echo "    - Manage services"
-    echo "    - Servers / Local machines"
-    echo "    - Localhost tunnels"
-    echo ""
-    echo "Select Add service and follow instructions to deploy your first project."
-    echo ""
-
 fi
 
 #Reboot (optional)

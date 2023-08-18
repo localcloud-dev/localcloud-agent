@@ -67,26 +67,17 @@ LocalCloud uses Git to manage deployment that's why you don’t need to learn ne
 
 - Add A record to DNS with the public IP address of your server. For example, if a public IP of your server is 153.111.51.139 and your custom domain is project.com, you can add a wildcard A record *.test.project.com -> 153.111.51.139. This is just an example, you should update with your real IP address and domain name.
 - SSH into your server
-- Install the service-node agent on this server (replace "service_node_domain" with your domain, for the example in the step 1 it could be agent.test.project.com):
+- Install the LocalCloud agent on this server (replace "your_domain" with your domain, for the example in the step 1 it could be agent.test.project.com):
 ```
-curl https://raw.githubusercontent.com/localcloud-dev/localcloud-agent/main/public/provision/deployed-service-node-install.sh | sh -s service_node_domain
+curl https://raw.githubusercontent.com/localcloud-dev/localcloud-agent/main/public/provision/deployed-service-node-install.sh | sh -s your_domain
 ```
-**service_node_domain** will be used for Bitbucket, Github and other webhooks, should be without http and https, for example: agent.test.project.com or deploy.domain.com, etc
+**your_domain** will be used for adding new servers and local machines, and handling Bitbucket, Github and other webhooks; should be without http and https, for example: agent.test.project.com or deploy.domain.com, etc
 
-- Wait until the LocalCloud agent finishes the server provision and follow the steps in the final message. If everything goes well, you'll see something like this:
-```
-To deploy a first project you should:
-
-- install LocalCloud CLI on your local machine (on your laptop, iMac, Desktop computer etc.). Run in Terminal/Console (NPM should be installed on your system):
-      
-    npm install -g https://github.com/localcloud-dev/localcloud-cli
-
-...
-```
+- Wait until the LocalCloud agent finishes the server provision and follow the steps in the final message. 
 
 #### How to deploy a project with the managed LocalCloud
 
-- Will be available from July, 2023
+- Will be available from September, 2023
 
 
 ### License
