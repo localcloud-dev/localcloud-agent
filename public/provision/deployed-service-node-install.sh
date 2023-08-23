@@ -75,6 +75,7 @@ else
 fi
 
 sudo chmod +x nebula
+mv nebula /usr/local/bin/nebula
 sudo mkdir /etc/nebula
 
 #Install Redis
@@ -99,9 +100,11 @@ if [ "$1" = "join" ]; then
     sudo ufw allow from 192.168.202.0/24
 
     #Start Nebula
-    #ToDo: Move to systemd
-    cd $HOME
-    sudo pm2 start ./nebula --name nebula -- -config /etc/nebula/config.yaml
+    sudo echo -e "[Unit]\nDescription=Nebula overlay networking tool\nWants=basic.target network-online.target nss-lookup.target time-sync.target\nAfter=basic.target network.target network-online.target\nBefore=sshd.service" >> /etc/systemd/system/localcloud-nebula.service
+    sudo echo -e "[Service]\nSyslogIdentifier=nebula\nExecReload=/bin/kill -HUP $MAINPID\nExecStart=/usr/local/bin/nebula -config /etc/nebula/config.yaml\nRestart=always" >> /etc/systemd/system/localcloud-nebula.service
+    sudo echo -e "[Install]\nWantedBy=multi-user.target" >> /etc/systemd/system/localcloud-nebula.service
+    sudo systemctl enable localcloud-nebula.service
+    sudo systemctl start localcloud-nebula.service
 
     #Use Redis instance as a replica
     sudo echo -e "\nreplica-read-only no\nreplicaof 192.168.202.1 6379" >> /etc/redis-stack.conf
@@ -157,9 +160,11 @@ else
     sudo mv $UUID.key /etc/nebula/host.key
     
     #Start Nebula
-    #ToDo: Move to systemd
-    cd $HOME
-    sudo pm2 start ./nebula --name nebula -- -config /etc/nebula/config.yaml
+    sudo echo -e "[Unit]\nDescription=Nebula overlay networking tool\nWants=basic.target network-online.target nss-lookup.target time-sync.target\nAfter=basic.target network.target network-online.target\nBefore=sshd.service" >> /etc/systemd/system/localcloud-nebula.service
+    sudo echo -e "[Service]\nSyslogIdentifier=nebula\nExecReload=/bin/kill -HUP $MAINPID\nExecStart=/usr/local/bin/nebula -config /etc/nebula/config.yaml\nRestart=always" >> /etc/systemd/system/localcloud-nebula.service
+    sudo echo -e "[Install]\nWantedBy=multi-user.target" >> /etc/systemd/system/localcloud-nebula.service
+    sudo systemctl enable localcloud-nebula.service
+    sudo systemctl start localcloud-nebula.service
 
     #Redis config for replicas
     sudo echo -e "\nreplica-read-only no\nbind 127.0.0.1 192.168.202.1\nprotected-mode no" >> /etc/redis-stack.conf
