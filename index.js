@@ -300,7 +300,6 @@ try {
   //Create routes
   const deployment = require("./routes/deployment");
   setInterval(deployment.check_deployment_query, 5000);
-  setInterval(deployment.create_restart_query, 5000);
 
   //Load other modules
   const proxy = require("./routes/proxy");
