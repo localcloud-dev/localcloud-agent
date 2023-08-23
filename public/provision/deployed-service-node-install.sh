@@ -40,9 +40,6 @@ curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
 DEBIAN_FRONTEND=noninteractive sudo apt-get install -y nodejs
 sudo npm install -g npm
 
-#Install PM2
-sudo npm install pm2@latest -g
-
 #Generate SSH keys
 sudo ssh-keygen -t rsa -N "" -f ~/.ssh/id_rsa
 
@@ -132,7 +129,12 @@ if [ "$1" = "join" ]; then
     #Will be improved in next versions
     cd $HOME/service-node
     npm install
-    sudo pm2 start index.js --name service-node 
+
+    sudo echo -e "[Unit]\nDescription=LocalCloud Agent\nWants=basic.target network-online.target nss-lookup.target time-sync.target\nAfter=basic.target network.target network-online.target" >> /etc/systemd/system/localcloud-agent.service
+    sudo echo -e "[Service]\nSyslogIdentifier=localcloud-agent\nExecStart=/usr/bin/node $HOME/service-node/index.js\nRestart=always" >> /etc/systemd/system/localcloud-agent.service
+    sudo echo -e "[Install]\nWantedBy=multi-user.target" >> /etc/systemd/system/localcloud-agent.service
+    sudo systemctl enable localcloud-agent.service
+    sudo systemctl start localcloud-agent.service
 
 else
 
@@ -170,10 +172,16 @@ else
     sudo echo -e "\nreplica-read-only no\nbind 127.0.0.1 192.168.202.1\nprotected-mode no" >> /etc/redis-stack.conf
     sudo systemctl restart redis-stack-server
 
+    #Start LocalCloud agent
     #We set a public domain for the first server
     cd $HOME/service-node
     npm install
-    sudo SERVICE_NODE_DOMAIN=$1  pm2 start index.js --name service-node 
+
+    sudo echo -e "[Unit]\nDescription=LocalCloud Agent\nWants=basic.target network-online.target nss-lookup.target time-sync.target\nAfter=basic.target network.target network-online.target" >> /etc/systemd/system/localcloud-agent.service
+    sudo echo -e "[Service]\nSyslogIdentifier=localcloud-agent\nExecStart=/usr/bin/node $HOME/service-node/index.js\nRestart=always\nEnvironment=SERVICE_NODE_DOMAIN=$1" >> /etc/systemd/system/localcloud-agent.service
+    sudo echo -e "[Install]\nWantedBy=multi-user.target" >> /etc/systemd/system/localcloud-agent.service
+    sudo systemctl enable localcloud-agent.service
+    sudo systemctl start localcloud-agent.service
 
 fi
 
@@ -182,16 +190,15 @@ echo "Waiting when the service-node agent is online"
 
 timeout 10 bash -c 'while [[ "$(curl -s -o /dev/null -w ''%{http_code}'' localhost:5005/hey)" != "200" ]]; do sleep 1; done' || false
 
-#Save PM2 to launch service-node and nebula after rebooting
-sudo pm2 startup
-sudo pm2 save
-
 #Install LocalCloud CLI
 npm install -g https://github.com/localcloud-dev/localcloud-cli
 
 if [ "$1" = "join" ]; then
     echo "LocalCloud agent is installed. Use CLI to deploy services and apps on this server. This server will should be listed in Servers menu item in CLI."
 else
+
+    cd $HOME
+    caddy reload
 
     #Start Podman container registry, in the current version the first server/root server is a build machine as well
     #We'll add special build nodes/machines in next version
