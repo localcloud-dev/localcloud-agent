@@ -18,6 +18,9 @@ async function add_service(service){
         full_name: service.full_name,
         environments: JSON.stringify(service.environments)
     })
+
+    await create_image_and_containers(service, service.environments[0]);
+
 }
 
 async function get_services(){   
@@ -85,6 +88,15 @@ async function get_vpn_node_by_id(node_id){
 
     //Simplify the output format
     return simplify_format(results.documents);
+}
+
+async function create_image_and_containers(service, environment){
+    console.log(`Create a new image record in DB`);
+    let image_id = await add_image(service, environment);
+    environment.servers.forEach(async (server) => {
+        console.log(`Create a new container record in DB`);
+        await add_container(image_id, server.id)
+    });
 }
 
 //Image Records
@@ -254,5 +266,5 @@ function simplify_format(documents){
     return services;
 }
 
-module.exports = {add_proxy, get_proxies, get_proxies_by_status, update_proxy_status, add_container, get_containers, get_containers_by_status, get_containers_by_status_and_target_id, update_container_status, save_services, save_tunnels, save_config, add_service, get_services, get_service_by_id, get_service_by_fullname, remove_service_by_id, add_vpn_node, get_vpn_nodes, get_vpn_node_by_id, add_image, get_image_by_id, get_images, get_images_by_status, update_image_status}
+module.exports = {add_proxy, get_proxies, get_proxies_by_status, update_proxy_status, create_image_and_containers, add_container, get_containers, get_containers_by_status, get_containers_by_status_and_target_id, update_container_status, save_services, save_tunnels, save_config, add_service, get_services, get_service_by_id, get_service_by_fullname, remove_service_by_id, add_vpn_node, get_vpn_nodes, get_vpn_node_by_id, add_image, get_image_by_id, get_images, get_images_by_status, update_image_status}
 
