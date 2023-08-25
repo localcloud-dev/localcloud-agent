@@ -69,11 +69,6 @@ module.exports = function (app) {
             console.log(`Found service: ${JSON.stringify(service)}`);
             var environment = JSON.parse(service.environments).find(environment => environment.branch === updated_branch);
             storage.create_image_and_containers(service, environment);
-            /*var environment = service.environments.find(environment => environment.branch === updated_branch);
-            if (environment != undefined) {
-                environment.status = "to_deploy";
-                storage.save_services();
-            }*/
         }
         res.statusCode = 200;
         res.end(JSON.stringify({}));
@@ -109,7 +104,7 @@ module.exports = function (app) {
             var environment = service.environments.find(environment => environment.branch === updated_branch);
             if (environment != undefined) {
                 environment.status = "to_deploy";
-                storage.save_services();
+                //storage.save_services();
             }
         }
 

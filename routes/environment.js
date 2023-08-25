@@ -4,16 +4,22 @@
 */
 
 const storage = require("../utils/storage");
+const { customAlphabet } = require("nanoid");
+const nanoid = customAlphabet('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz', 11); //~117 years or 1B IDs needed, in order to have a 1% probability of at least one collision, https://zelark.github.io/nano-id-cc/
+const REGEXP_SPECIAL_CHAR = /[\!\#\$\%\^\&\*\)\(\+\=\.\<\>\{\}\[\]\:\;\'\"\|\~\`\_\-\/]/g;
 
 module.exports = function (app) {
 
     app.post('/environment/:service_id', async function (req, res) {
 
-        const service_id = req.params.service_id;
+        let service_id = req.params.service_id;
         var new_environment = req.body;
-        let saved_service = global.services.find(service => service.id === service_id);
-        if (saved_service != undefined) {
-            saved_service.environments.forEach((environment, index) => {
+
+        let services = await storage.get_service_by_id(service_id);
+
+        if (services.length != 0){
+            let service = services[0];
+            service.environments.forEach((environment, index) => {
                 if (environment.branch == new_environment.branch){
                     global.logger.error(`The environment for the branch ${environment.branch} already exists.`);
                     res.statusCode = 409;
@@ -22,10 +28,10 @@ module.exports = function (app) {
                 }
             })
 
-            new_environment.status = `to_deploy`;
-            saved_service.environments.push(new_environment);
+            new_environment.image_status = 'to_build';
+            new_environment.id = nanoid().replace(REGEXP_SPECIAL_CHAR, '\\$&');
 
-            storage.save_services();
+            storage.add_environment(service, new_environment);
 
             global.logger.info(`New environment added:`);
             global.logger.info(`${JSON.stringify(new_environment)}`);
@@ -43,17 +49,17 @@ module.exports = function (app) {
 
     app.delete('/environment/:service_id/:environment_name', async function (req, res) {
 
-        const service_id = req.params.service_id;
-        const environment_name = req.params.environment_name;
+        let service_id = req.params.service_id;
+        let environment_name = req.params.environment_name;
 
-        let service = global.services.find(service => service.id === service_id);
-        if (service != undefined) {
-
+        let services = await storage.get_service_by_id(service_id);
+        if (services.length != 0){
+            let service = services[0];
             let environment = service.environments.find(environment => environment.name === environment_name);
             if (environment != undefined) {
-                //We should just plan for removing here
+                //We should plan to remove this environment here
                 environment.status = `to_remove`;
-                storage.save_services();
+                storage.remove_environment(service, environment);
                 global.logger.info(`Environment: ${environment_name} in the service with id: ${service_id} has been planned for removing`);
                 res.statusCode = 200;
                 res.end("");  
@@ -62,7 +68,6 @@ module.exports = function (app) {
                 res.statusCode = 404;
                 res.end(JSON.stringify({ "msg": `Cannot find "${environment_name}" environment in a service with id: ${service_id}.` })); 
             }
-
         }else{
             global.logger.error(`Cannot find a service with id: ${service_id}.`);
             res.statusCode = 404;

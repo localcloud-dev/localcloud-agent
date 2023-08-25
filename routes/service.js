@@ -52,14 +52,12 @@ module.exports = function (app) {
         if (result.total == 0) {
             var new_service = {};
 
-            new_service.id = nanoid();
-            new_service.id = new_service.id.replace(REGEXP_SPECIAL_CHAR, '\\$&');
+            new_service.id = nanoid().replace(REGEXP_SPECIAL_CHAR, '\\$&');
 
             var id_search_result = await global.redis_client.ft.search(
                 'idx:services',
                 `@id: /${new_service.id}/`
             );
-            console.log(JSON.stringify(result, null, 2));
             
             while (id_search_result.total != 0) {
                 new_service.id = nanoid();
@@ -75,6 +73,7 @@ module.exports = function (app) {
 
             environments.forEach((environment, index) => {
                 environment.image_status = 'to_build';
+                environment.id = nanoid().replace(REGEXP_SPECIAL_CHAR, '\\$&');
             })
 
             new_service.environments = environments;

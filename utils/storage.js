@@ -20,7 +20,6 @@ async function add_service(service){
     })
 
     await create_image_and_containers(service, service.environments[0]);
-
 }
 
 async function get_services(){   
@@ -56,6 +55,25 @@ async function get_service_by_fullname(full_name){
 async function remove_service_by_id(service_id){   
     await global.redis_client.del(`service:${service_id}`);
 }
+
+//Environments
+async function add_environment(service, environment){
+    service.environments.push(environment);
+    await global.redis_client.hSet(`service:${service.id}`, {
+        environments: JSON.stringify(service.environments)
+    })
+
+    await create_image_and_containers(service, environment);
+}
+
+async function remove_environment(service, environment){
+    //Now we just update a record in DB, all workloads will get replicas of this record
+    await global.redis_client.hSet(`service:${service.id}`, {
+        environments: JSON.stringify(service.environments)
+    })
+}
+
+//Tunnels
 
 function save_tunnels(){
     global.redis_client.set('tunnels', JSON.stringify(global.tunnels));
@@ -266,5 +284,5 @@ function simplify_format(documents){
     return services;
 }
 
-module.exports = {add_proxy, get_proxies, get_proxies_by_status, update_proxy_status, create_image_and_containers, add_container, get_containers, get_containers_by_status, get_containers_by_status_and_target_id, update_container_status, save_services, save_tunnels, save_config, add_service, get_services, get_service_by_id, get_service_by_fullname, remove_service_by_id, add_vpn_node, get_vpn_nodes, get_vpn_node_by_id, add_image, get_image_by_id, get_images, get_images_by_status, update_image_status}
+module.exports = {add_proxy, get_proxies, get_proxies_by_status, update_proxy_status, create_image_and_containers, add_container, get_containers, get_containers_by_status, get_containers_by_status_and_target_id, update_container_status, add_environment, remove_environment, save_services, save_tunnels, save_config, add_service, get_services, get_service_by_id, get_service_by_fullname, remove_service_by_id, add_vpn_node, get_vpn_nodes, get_vpn_node_by_id, add_image, get_image_by_id, get_images, get_images_by_status, update_image_status}
 
