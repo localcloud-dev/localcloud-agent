@@ -30,8 +30,8 @@ module.exports = function (app) {
 
             new_environment.image_status = 'to_build';
             new_environment.id = nanoid().replace(REGEXP_SPECIAL_CHAR, '\\$&');
-
-            storage.add_environment(service, new_environment);
+            new_environment.service_id = service_id;
+            storage.add_environment(new_environment);
 
             global.logger.info(`New environment added:`);
             global.logger.info(`${JSON.stringify(new_environment)}`);
@@ -59,7 +59,7 @@ module.exports = function (app) {
             if (environment != undefined) {
                 //We should plan to remove this environment here
                 environment.status = `to_remove`;
-                storage.remove_environment(service, environment);
+                storage.update_environment_status(environment);
                 global.logger.info(`Environment: ${environment_name} in the service with id: ${service_id} has been planned for removing`);
                 res.statusCode = 200;
                 res.end("");  

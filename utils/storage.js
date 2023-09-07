@@ -15,11 +15,8 @@ async function add_service(service){
         id: service.id,
         git_url: service.git_url,
         name: service.name,
-        full_name: service.full_name,
-        environments: JSON.stringify(service.environments)
+        full_name: service.full_name
     })
-
-    await create_image_and_containers(service, service.environments[0]);
 }
 
 async function get_services(){   
@@ -57,24 +54,52 @@ async function remove_service_by_id(service_id){
 }
 
 //Environments
-async function add_environment(service, environment){
-    service.environments.push(environment);
-    await global.redis_client.hSet(`service:${service.id}`, {
-        environments: JSON.stringify(service.environments)
+async function add_environment(environment){
+    await global.redis_client.hSet(`environment:${environment.id}`, {
+        id: environment.id,
+        name:environment.name,
+        branch:environment.branch,
+        domain:environment.domain,
+        port:environment.port,
+        image_status:environment.image_status,
+        service_id:environment.service_id,
+        servers:JSON.stringify(environment.servers)
     })
 
-    await create_image_and_containers(service, environment);
+    let services = await storage.get_service_by_id(environment.service_id);
+    if (services.length != 0){
+        await create_image_and_containers(services[0], environment);
+    }
+}
+
+async function update_environment_status(environment_id, status){
+    await global.redis_client.hSet(`environment:${environment_id}`, {
+        status: status
+    })
 }
 
 async function remove_environment(service, environment){
     //Now we just update a record in DB, all workloads will get replicas of this record
-    await global.redis_client.hSet(`service:${service.id}`, {
-        environments: JSON.stringify(service.environments)
-    })
+}
+
+async function get_environment_by_branch(branch){   
+    let results = await global.redis_client.ft.search(
+        'idx:environments',
+        `@branch: {${branch.replace(REGEXP_SPECIAL_CHAR, '\\$&')}}`
+    );
+
+    //Simplify the output format
+    const environments = simplify_format(results.documents);
+    if (environments.length > 0){
+        let environment = environments[0];
+        environment.servers = JSON.parse(environment.servers);
+        return environment;
+    }
+
+    return null;
 }
 
 //Tunnels
-
 function save_tunnels(){
     global.redis_client.set('tunnels', JSON.stringify(global.tunnels));
 }
@@ -123,7 +148,7 @@ async function add_image(service, environment){
     await global.redis_client.hSet(`image:${image_id}`, {
         id: image_id,
         service_id: service.id,
-        environment: JSON.stringify(environment),
+        environment_id: environment.id,
         git_url: service.git_url,
         status: "to_do"
     })
@@ -284,5 +309,4 @@ function simplify_format(documents){
     return services;
 }
 
-module.exports = {add_proxy, get_proxies, get_proxies_by_status, update_proxy_status, create_image_and_containers, add_container, get_containers, get_containers_by_status, get_containers_by_status_and_target_id, update_container_status, add_environment, remove_environment, save_services, save_tunnels, save_config, add_service, get_services, get_service_by_id, get_service_by_fullname, remove_service_by_id, add_vpn_node, get_vpn_nodes, get_vpn_node_by_id, add_image, get_image_by_id, get_images, get_images_by_status, update_image_status}
-
+module.exports = {add_proxy, get_proxies, get_proxies_by_status, update_proxy_status, create_image_and_containers, add_container, get_containers, get_containers_by_status, get_containers_by_status_and_target_id, update_container_status, add_environment, remove_environment, update_environment_status, get_environment_by_branch, save_services, save_tunnels, save_config, add_service, get_services, get_service_by_id, get_service_by_fullname, remove_service_by_id, add_vpn_node, get_vpn_nodes, get_vpn_node_by_id, add_image, get_image_by_id, get_images, get_images_by_status, update_image_status}

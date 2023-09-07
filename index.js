@@ -142,6 +142,26 @@ async function connect_redis() {
 }
 
 try {
+  await global.redis_client.ft.create('idx:environments', {
+    name: redis_db.SchemaFieldTypes.TAG,
+    branch: redis_db.SchemaFieldTypes.TAG,
+    id: redis_db.SchemaFieldTypes.TEXT,
+  }, {
+      ON: 'HASH',
+      PREFIX: 'service',
+  });
+
+} catch (e) {
+  if (e.message === 'Index already exists') {
+      console.log('Index exists already, skipped creation.');
+  } else {
+      // Something went wrong, perhaps RediSearch isn't installed...
+      console.error(e);
+      process.exit(1);
+  }
+}
+
+try {
   await global.redis_client.ft.create('idx:images', {
     status: redis_db.SchemaFieldTypes.TAG,
     id: redis_db.SchemaFieldTypes.TEXT,

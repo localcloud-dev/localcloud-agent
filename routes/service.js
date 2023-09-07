@@ -74,12 +74,16 @@ module.exports = function (app) {
             environments.forEach((environment, index) => {
                 environment.image_status = 'to_build';
                 environment.id = nanoid().replace(REGEXP_SPECIAL_CHAR, '\\$&');
+                environment.service_id = new_service.id;
             })
 
-            new_service.environments = environments;
             new_service.git_url = git_url;
 
-            storage.add_service(new_service);
+            await storage.add_service(new_service);
+
+            environments.forEach(async (environment, index) => {
+                await storage.add_environment(environment);
+            })
 
             global.logger.info(`New service added:`);
             global.logger.info(`${JSON.stringify(new_service)}`);
