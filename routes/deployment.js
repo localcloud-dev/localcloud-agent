@@ -81,7 +81,7 @@ async function check_deployment_query() {
 
                                     //Start a container
                                     //ToDo check if the repository has a Docker file
-                                    exec(`podman build . -t ${image_id}`, {
+                                    exec(`docker build . -t ${image_id}`, {
                                         cwd: `${homedir}/${repository_name}`
                                     }, function (err, stdout, stderr) {
                                         global.logger.error(`${stdout}: ${stderr}`);
@@ -95,7 +95,7 @@ async function check_deployment_query() {
                                             //environment.image_status = 'registry_push';
 
                                             //Tag and push the image to the container registry
-                                            exec(`podman image tag ${image_id} localhost:7000/${image_id}`, {
+                                            exec(`docker image tag ${image_id} localhost:7000/${image_id}`, {
                                                 cwd: `${homedir}/${repository_name}`
                                             }, function (err, stdout, stderr) {
                                                 global.logger.info(`${stdout}: ${stderr}`);
@@ -105,7 +105,7 @@ async function check_deployment_query() {
                                                     //Push to the container registry
                                                     //We set --tls-verify=false because we push to localhost
                                                     //Also all traffic between servers within VPN is encrypted
-                                                    exec(`podman image push localhost:7000/${image_id} --tls-verify=false`, {
+                                                    exec(`docker image push localhost:7000/${image_id} --tls-verify=false`, {
                                                         cwd: `${homedir}/${repository_name}`
                                                     }, async function (err, stdout, stderr) {
                                                         global.logger.info(`${stdout}: ${stderr}`);
@@ -163,10 +163,10 @@ async function check_deployment_query() {
                     //We set --tls-verify=false because we push to localhost
                     //Also all traffic between servers within VPN is encrypted
                     global.logger.info(`Pulling a container: ${image_id}`);
-                    exec(`podman image pull 192.168.202.1:7000/${image_id} --tls-verify=false`, {
+                    exec(`docker image pull 192.168.202.1:7000/${image_id} --tls-verify=false`, {
                         cwd: `${homedir}`
                     }, function (err, stdout, stderr) {
-                        global.logger.info(`podman pull output: ${stdout}, error output: ${stderr}`);
+                        global.logger.info(`docker pull output: ${stdout}, error output: ${stderr}`);
 
                         if (err == undefined || err == null) {
                             global.logger.info(`Image ${image_id} has been pulled from the container registry`);
@@ -189,30 +189,17 @@ async function check_deployment_query() {
                 return false;
             }
             global.logger.info(`A free port has ben found: ${available_port}`);
-            global.logger.info(`Running a command: podman run -p ${available_port}:${service_port} -d ${image_id} --name ${image_id}`);
+            global.logger.info(`Running a command: docker run -p ${available_port}:${service_port} -d ${image_id} --name ${image_id}`);
 
-            exec(`podman container run -p ${available_port}:${service_port} -d --name ${image_id} ${image_id}`, {
+            exec(`docker container run -p ${available_port}:${service_port} -d --name ${image_id} ${image_id}`, {
                 cwd: `${homedir}`
             }, async function (err, stdout, stderr) {
-                global.logger.info(`podman run output: ${stdout}, error output: ${stderr}`);
+                global.logger.info(`docker run output: ${stdout}, error output: ${stderr}`);
 
                 if (err == undefined || err == null) {
 
                     global.logger.info(`Container ${image_id} has been started`);
-
-                    //Add systemd service for this container to start it on system boot
-                    exec(`podman generate systemd --new --name ${image_id} > /etc/systemd/system/${image_id}.service && systemctl enable ${image_id} && systemctl start ${image_id}`, {
-                        cwd: `${homedir}`
-                    }, async function (err, stdout, stderr) {
-                        global.logger.info(`podman generate systemd output: ${stdout}, error output: ${stderr}`);
-
-                        if (err == undefined || err == null) {
-                            global.logger.info(`systemd service for container ${image_id} has been started`);
-
-                            //Send a message to a root node (now it's the first deployed server in VPN) that container is started and proxy server can be updated with new domain
-                            //ToDo: Replace fixed IP address of a first server with some domain name
-
-                            request
+                    request
                                 .post(`http://192.168.202.1:5005/proxy`)
                                 .send({ container_id: container.id, workload_ip: me_node.ip, port: available_port, domain: environment.domain }) // sends a JSON post body
                                 .set('accept', 'json')
@@ -221,11 +208,6 @@ async function check_deployment_query() {
                                     // Calling the end function will send the request
                                     console.log(`\nMessage to create a new proxy for container: ${container.id}, domain: ${environment.domain} is delivered.\n`);
                                 });
-                            return true;
-                        } else {
-                            return false;
-                        }
-                    });
                     return true;
                 } else {
                     return false;

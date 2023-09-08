@@ -146,6 +146,7 @@ try {
     name: redis_db.SchemaFieldTypes.TAG,
     branch: redis_db.SchemaFieldTypes.TAG,
     id: redis_db.SchemaFieldTypes.TEXT,
+    service_id: redis_db.SchemaFieldTypes.TEXT,
   }, {
       ON: 'HASH',
       PREFIX: 'service',

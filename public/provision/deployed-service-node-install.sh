@@ -22,22 +22,41 @@ sudo ufw allow 9418
 sudo ufw allow 4242
 sudo ufw --force enable
 
-#Install Podman
-DEBIAN_FRONTEND=noninteractive  sudo apt-get update
-DEBIAN_FRONTEND=noninteractive  sudo apt-get -y install podman
+#Install Docker
+DEBIAN_FRONTEND=noninteractive sudo apt-get update
+DEBIAN_FRONTEND=noninteractive sudo apt-get install -y ca-certificates curl gnupg 
+DEBIAN_FRONTEND=noninteractive sudo install -y -m 0755 -d /etc/apt/keyrings
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+sudo chmod a+r /etc/apt/keyrings/docker.gpg
+
+echo \
+  "deb [arch="$(dpkg --print-architecture)" signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
+  "$(. /etc/os-release && echo "$VERSION_CODENAME")" stable" | \
+  sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+DEBIAN_FRONTEND=noninteractive sudo apt-get update
+DEBIAN_FRONTEND=noninteractive sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+
+#Set Docker with UFW
+sudo wget -O /usr/local/bin/ufw-docker https://github.com/chaifeng/ufw-docker/raw/master/ufw-docker
+sudo chmod +x /usr/local/bin/ufw-docker
+ufw-docker install
+sudo systemctl restart ufw
 
 #echo "unqualified-search-registries = [\"docker.io\"]" >> $HOME/.config/containers/registries.conf 
-echo "unqualified-search-registries = [\"docker.io\"]" >> /etc/containers/registries.conf 
+#echo "unqualified-search-registries = [\"docker.io\"]" >> /etc/containers/registries.conf 
 
-sudo iptables -I FORWARD -p tcp ! -i cni-podman0 -o cni-podman0 -j ACCEPT #to accept connections to podman containers with enabled ufw - https://stackoverflow.com/questions/70870689/configure-ufw-for-podman-on-port-443
+#sudo iptables -I FORWARD -p tcp ! -i cni-podman0 -o cni-podman0 -j ACCEPT #to accept connections to podman containers with enabled ufw - https://stackoverflow.com/questions/70870689/configure-ufw-for-podman-on-port-443
 
 echo iptables-persistent iptables-persistent/autosave_v4 boolean true | sudo debconf-set-selections
 echo iptables-persistent iptables-persistent/autosave_v6 boolean true | sudo debconf-set-selections
 DEBIAN_FRONTEND=noninteractive sudo apt-get -y install iptables-persistent
 
 #Install npm & node.js
-curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash - 
-DEBIAN_FRONTEND=noninteractive sudo apt-get install -y nodejs
+sudo mkdir -p /etc/apt/keyrings
+curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | sudo gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg
+echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_20.x nodistro main" | sudo tee /etc/apt/sources.list.d/nodesource.list
+DEBIAN_FRONTEND=noninteractive sudo apt-get update
+DEBIAN_FRONTEND=noninteractive sudo apt-get install nodejs -y
 sudo npm install -g npm
 
 #Generate SSH keys
@@ -202,14 +221,14 @@ else
 
     #Start Podman container registry, in the current version the first server/root server is a build machine as well
     #We'll add special build nodes/machines in next version
-    podman container run -dt -p 7000:5000 --name depl-registry --volume depl-registry:/var/lib/registry:Z docker.io/library/registry:2
-    sudo iptables -I FORWARD -p tcp ! -i cni-podman0 -o cni-podman0 -s 192.168.202.0/24 --dport 5000 -j ACCEPT
-    sudo netfilter-persistent save
+    sudo docker container run -dt -p 7000:5000 --name depl-registry --volume depl-registry:/var/lib/registry:Z docker.io/library/registry:2
+    #sudo iptables -I FORWARD -p tcp ! -i cni-podman0 -o cni-podman0 -s 192.168.202.0/24 --dport 5000 -j ACCEPT
+    #sudo netfilter-persistent save
 
     #Start Registry container on every boot
-    podman generate systemd --new --name depl-registry > /etc/systemd/system/depl-registry.service
-    systemctl enable depl-registry
-    systemctl start depl-registry
+    #sudo podman generate systemd --new --name depl-registry > /etc/systemd/system/depl-registry.service
+    #systemctl enable depl-registry
+    #systemctl start depl-registry
 
     echo ""
     echo ""

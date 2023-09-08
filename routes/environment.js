@@ -16,17 +16,15 @@ module.exports = function (app) {
         var new_environment = req.body;
 
         let services = await storage.get_service_by_id(service_id);
-
         if (services.length != 0){
-            let service = services[0];
-            service.environments.forEach((environment, index) => {
-                if (environment.branch == new_environment.branch){
-                    global.logger.error(`The environment for the branch ${environment.branch} already exists.`);
-                    res.statusCode = 409;
-                    res.end(JSON.stringify({ "msg": `The environment for the branch ${environment.branch} already exists.` }));        
-                    return;
-                }
-            })
+            let environment = await storage.get_environment_by_branch(service_id, new_environment.branch);
+
+            if (environment != null){
+                global.logger.error(`The environment for the branch ${environment.branch} already exists.`);
+                res.statusCode = 409;
+                res.end(JSON.stringify({ "msg": `The environment for the branch ${environment.branch} already exists.` }));        
+                return;
+            }
 
             new_environment.image_status = 'to_build';
             new_environment.id = nanoid().replace(REGEXP_SPECIAL_CHAR, '\\$&');

@@ -67,7 +67,7 @@ module.exports = function (app) {
         if (services != undefined && services.length == 1) {
             let service = services[0];
             console.log(`Found service: ${JSON.stringify(service)}`);
-            var environment = await storage.get_environment_by_branch(updated_branch);
+            var environment = await storage.get_environment_by_branch(service.id, updated_branch);
             storage.create_image_and_containers(service, environment);
         }
         res.statusCode = 200;
