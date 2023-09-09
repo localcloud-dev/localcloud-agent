@@ -149,7 +149,7 @@ try {
     service_id: redis_db.SchemaFieldTypes.TEXT,
   }, {
       ON: 'HASH',
-      PREFIX: 'service',
+      PREFIX: 'environment',
   });
 
 } catch (e) {
@@ -204,6 +204,7 @@ try {
 try {
   await global.redis_client.ft.create('idx:proxies', {
     status: redis_db.SchemaFieldTypes.TAG,
+    domain: redis_db.SchemaFieldTypes.TAG,
     id: redis_db.SchemaFieldTypes.TEXT,
   }, {
       ON: 'HASH',

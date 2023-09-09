@@ -36,7 +36,12 @@ async function check_deployment_query() {
                 await storage.update_image_status(image_id, "in_progress");
 
                 const git_url = image.git_url;
-                const branch = JSON.parse(image.environment).branch;
+                const environment = await storage.get_environment_by_id(image.environment_id);
+                if (environment == null){
+                    global.logger.error(`check_build_image: Environment with id: ${image.environment_id} not found. Stopping deployment.`);
+                    return;
+                }
+                const branch = environment.branch;
                 const repository_name = `${crypto.randomUUID()}`;
                 global.logger.info(`Found a new image to build: ${git_url}, branch:${branch}`);
 
@@ -105,7 +110,7 @@ async function check_deployment_query() {
                                                     //Push to the container registry
                                                     //We set --tls-verify=false because we push to localhost
                                                     //Also all traffic between servers within VPN is encrypted
-                                                    exec(`docker image push localhost:7000/${image_id} --tls-verify=false`, {
+                                                    exec(`docker image push localhost:7000/${image_id}`, {
                                                         cwd: `${homedir}/${repository_name}`
                                                     }, async function (err, stdout, stderr) {
                                                         global.logger.info(`${stdout}: ${stderr}`);
@@ -155,7 +160,7 @@ async function check_deployment_query() {
 
                 if (images.length > 0 && images[0].status == "done") {
                     let image = images[0];
-                    let environment = JSON.parse(image.environment);
+                    const environment = await storage.get_environment_by_id(image.environment_id);
                     await storage.update_container_status(container.id, "in_progress");
 
                     global.logger.info(`Deploying on server: ${me_node.id}: ${me_node.ip}`);
@@ -163,7 +168,7 @@ async function check_deployment_query() {
                     //We set --tls-verify=false because we push to localhost
                     //Also all traffic between servers within VPN is encrypted
                     global.logger.info(`Pulling a container: ${image_id}`);
-                    exec(`docker image pull 192.168.202.1:7000/${image_id} --tls-verify=false`, {
+                    exec(`docker image pull 192.168.202.1:7000/${image_id}`, {
                         cwd: `${homedir}`
                     }, function (err, stdout, stderr) {
                         global.logger.info(`docker pull output: ${stdout}, error output: ${stderr}`);
@@ -189,9 +194,9 @@ async function check_deployment_query() {
                 return false;
             }
             global.logger.info(`A free port has ben found: ${available_port}`);
-            global.logger.info(`Running a command: docker run -p ${available_port}:${service_port} -d ${image_id} --name ${image_id}`);
+            global.logger.info(`Running a command: docker run -p ${available_port}:${service_port} -d --name ${image_id} ${image_id}`);
 
-            exec(`docker container run -p ${available_port}:${service_port} -d --name ${image_id} ${image_id}`, {
+            exec(`docker container run -p ${available_port}:${service_port} -d --name ${image_id} 192.168.202.1:7000/${image_id}`, {
                 cwd: `${homedir}`
             }, async function (err, stdout, stderr) {
                 global.logger.info(`docker run output: ${stdout}, error output: ${stderr}`);

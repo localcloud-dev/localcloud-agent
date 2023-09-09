@@ -101,7 +101,7 @@ ${tunnel.domain} {
         }
 
         //Reload Caddyfile
-        exec(`cd $HOME && caddy reload`, function (err, stdout, stderr) {
+        exec(`caddy reload`,{cwd: `${homedir}`}, async function (err, stdout, stderr) {
             global.logger.info(`Proxy has been reloaded`);
         });
 

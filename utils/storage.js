@@ -114,6 +114,19 @@ async function get_environments_by_service_id(service_id){
     return simplify_format(results.documents);
 }
 
+async function get_environment_by_id(environment_id){   
+    let results = await global.redis_client.ft.search(
+        'idx:environments',
+        `@id: /${environment_id}/`
+    );
+
+    const environments = simplify_format(results.documents);
+    if (environments.length > 0){
+        return environments[0];
+    }
+    return null;
+}
+
 //Tunnels
 function save_tunnels(){
     global.redis_client.set('tunnels', JSON.stringify(global.tunnels));
@@ -254,6 +267,13 @@ async function update_container_status(container_id, status){
 
 //Proxy Records
 async function add_proxy(vpn_ip, port, domain, container_id){
+    //Remove an old proxy with the same domain
+    let old_proxy = await get_proxy_by_domain(domain);
+    if (old_proxy != null){
+        await global.redis_client.del(`proxy:${old_proxy.id}`);
+    }
+
+    //Add a new proxy
     let proxy_id = nanoid();
     await global.redis_client.hSet(`proxy:${proxy_id}`, {
         id: proxy_id,
@@ -283,6 +303,20 @@ async function get_proxies_by_status(status){
 
     //Simplify the output format
     return simplify_format(results.documents);
+}
+
+async function get_proxy_by_domain(domain){
+    let results = await global.redis_client.ft.search(
+        'idx:proxies',
+        `@domain: {${domain.replace(REGEXP_SPECIAL_CHAR, '\\$&')}}`
+    ); 
+
+    //Simplify the output format
+    let proxies = simplify_format(results.documents);
+    if (proxies.length > 0){
+        return proxies[0];
+    }
+    return null;
 }
 
 async function update_proxy_status(proxy_id, status){
@@ -324,4 +358,4 @@ function simplify_format(documents){
     return services;
 }
 
-module.exports = {add_proxy, get_proxies, get_proxies_by_status, update_proxy_status, create_image_and_containers, add_container, get_containers, get_containers_by_status, get_containers_by_status_and_target_id, update_container_status, add_environment, remove_environment, update_environment_status, get_environment_by_branch, get_environments_by_service_id, save_services, save_tunnels, save_config, add_service, get_services, get_service_by_id, get_service_by_fullname, remove_service_by_id, add_vpn_node, get_vpn_nodes, get_vpn_node_by_id, add_image, get_image_by_id, get_images, get_images_by_status, update_image_status}
+module.exports = {add_proxy, get_proxies, get_proxies_by_status, update_proxy_status, create_image_and_containers, add_container, get_containers, get_containers_by_status, get_containers_by_status_and_target_id, update_container_status, add_environment, remove_environment, update_environment_status, get_environment_by_branch, get_environments_by_service_id, get_environment_by_id, save_services, save_tunnels, save_config, add_service, get_services, get_service_by_id, get_service_by_fullname, remove_service_by_id, add_vpn_node, get_vpn_nodes, get_vpn_node_by_id, add_image, get_image_by_id, get_images, get_images_by_status, update_image_status}

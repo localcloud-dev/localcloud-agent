@@ -42,6 +42,9 @@ sudo chmod +x /usr/local/bin/ufw-docker
 ufw-docker install
 sudo systemctl restart ufw
 
+sudo echo -e "{\"insecure-registries\" : [\"192.168.202.1:7000\"]}" >> /etc/docker/daemon.json
+sudo systemctl restart docker
+
 #echo "unqualified-search-registries = [\"docker.io\"]" >> $HOME/.config/containers/registries.conf 
 #echo "unqualified-search-registries = [\"docker.io\"]" >> /etc/containers/registries.conf 
 
@@ -205,7 +208,7 @@ else
 fi
 
 #Wait until service-node agent is started
-echo "Waiting when the service-node agent is online"
+echo "Waiting when LocalCloud agent is online"
 
 timeout 10 bash -c 'while [[ "$(curl -s -o /dev/null -w ''%{http_code}'' localhost:5005/hey)" != "200" ]]; do sleep 1; done' || false
 
@@ -213,6 +216,8 @@ timeout 10 bash -c 'while [[ "$(curl -s -o /dev/null -w ''%{http_code}'' localho
 npm install -g https://github.com/localcloud-dev/localcloud-cli
 
 if [ "$1" = "join" ]; then
+    echo ""
+    echo ""
     echo "LocalCloud agent is installed. Use CLI to deploy services and apps on this server. This server will should be listed in Servers menu item in CLI."
 else
 
