@@ -71,11 +71,6 @@ async function add_environment(environment){
         service_id:environment.service_id,
         servers:JSON.stringify(environment.servers)
     })
-
-    let services = await storage.get_service_by_id(environment.service_id);
-    if (services.length != 0){
-        await create_image_and_containers(services[0], environment);
-    }
 }
 
 async function update_environment_status(environment_id, status){

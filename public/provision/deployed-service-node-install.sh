@@ -45,14 +45,10 @@ sudo systemctl restart ufw
 sudo echo -e "{\"insecure-registries\" : [\"192.168.202.1:7000\"]}" >> /etc/docker/daemon.json
 sudo systemctl restart docker
 
-#echo "unqualified-search-registries = [\"docker.io\"]" >> $HOME/.config/containers/registries.conf 
-#echo "unqualified-search-registries = [\"docker.io\"]" >> /etc/containers/registries.conf 
 
-#sudo iptables -I FORWARD -p tcp ! -i cni-podman0 -o cni-podman0 -j ACCEPT #to accept connections to podman containers with enabled ufw - https://stackoverflow.com/questions/70870689/configure-ufw-for-podman-on-port-443
-
-echo iptables-persistent iptables-persistent/autosave_v4 boolean true | sudo debconf-set-selections
-echo iptables-persistent iptables-persistent/autosave_v6 boolean true | sudo debconf-set-selections
-DEBIAN_FRONTEND=noninteractive sudo apt-get -y install iptables-persistent
+#echo iptables-persistent iptables-persistent/autosave_v4 boolean true | sudo debconf-set-selections
+#echo iptables-persistent iptables-persistent/autosave_v6 boolean true | sudo debconf-set-selections
+#DEBIAN_FRONTEND=noninteractive sudo apt-get -y install iptables-persistent
 
 #Install npm & node.js
 sudo mkdir -p /etc/apt/keyrings
@@ -218,23 +214,25 @@ npm install -g https://github.com/localcloud-dev/localcloud-cli
 if [ "$1" = "join" ]; then
     echo ""
     echo ""
-    echo "LocalCloud agent is installed. Use CLI to deploy services and apps on this server. This server will should be listed in Servers menu item in CLI."
+    echo "==================================================================================="
+    echo ""
+    echo "LocalCloud agent is installed. Use CLI on the first server to deploy services and apps on this server. "
+    echo ""
+    echo "==================================================================================="
+    echo ""
+    echo ""
 else
 
     cd $HOME
     caddy reload
 
-    #Start Podman container registry, in the current version the first server/root server is a build machine as well
+    #Start Docker container registry, in the current version the first server/root server is a build machine as well
     #We'll add special build nodes/machines in next version
     sudo docker container run -dt -p 7000:5000 --name depl-registry --volume depl-registry:/var/lib/registry:Z docker.io/library/registry:2
-    #sudo iptables -I FORWARD -p tcp ! -i cni-podman0 -o cni-podman0 -s 192.168.202.0/24 --dport 5000 -j ACCEPT
-    #sudo netfilter-persistent save
 
-    #Start Registry container on every boot
-    #sudo podman generate systemd --new --name depl-registry > /etc/systemd/system/depl-registry.service
-    #systemctl enable depl-registry
-    #systemctl start depl-registry
-
+    echo ""
+    echo ""
+    echo "==================================================================================="
     echo ""
     echo ""
     echo "LocalCloud agent is installed. Use LocalCloud CLI to manage servers, local machines, services, apps, deployments and localhost tunnels. Check localcloud.dev/docs/cli for more information."
@@ -242,6 +240,10 @@ else
     echo "To run LocalCloud CLI:"
     echo ""
     echo "      localcloud"
+    echo ""
+    echo ""
+    echo "==================================================================================="
+    echo ""
     echo ""
 fi
 

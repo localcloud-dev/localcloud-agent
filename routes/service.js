@@ -3,7 +3,9 @@
     Methods for service management
 */
 
+const pipeline = require("../utils/pipeline");
 const path = require('path');
+const deploy = require("./deploy");
 const storage = require("../utils/storage");
 const { customAlphabet } = require("nanoid");
 const nanoid = customAlphabet('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz', 11); //~117 years or 1B IDs needed, in order to have a 1% probability of at least one collision, https://zelark.github.io/nano-id-cc/
@@ -83,6 +85,8 @@ module.exports = function (app) {
 
             environments.forEach(async (environment, index) => {
                 await storage.add_environment(environment);
+                //Schedule deployment of this environment
+                pipeline.schedule_deployment(repository_full_name, environment.branch);
             })
 
             global.logger.info(`New service added:`);

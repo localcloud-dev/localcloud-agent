@@ -3,7 +3,7 @@
     Methods for project deployment
 */
 
-const storage = require("../utils/storage");
+const pipeline = require("../utils/pipeline");
 const auth = require("../utils/auth");
 const fs = require('fs');
 const home_dir = `${require('os').homedir()}`;
@@ -40,11 +40,25 @@ module.exports = function (app) {
 
     });
 
-    app.get('/deploy/credentials', async function (req, res) {
-        const ssh_pub_key = fs.readFileSync(home_dir + '/.ssh/id_rsa.pub', 'utf8');
-        const credentials = {"ssh_pub_key":ssh_pub_key,"webhook_url":`https://${global.service_node_config.domain}/deploy/${global.service_node_config.api_token}`}
+    //Manual deployment
+    app.get('/deploy/:api_token/:repo_full_name/:branch', async function (req, res) {
+
+        //Git services doesn't send any custom headers that's why we can use only api_token in URL and add it to headers here
+        req.headers["api-token"]= req.params.api_token;
+        if (await auth.validate_token(req.headers) == false){
+            res.statusCode = 401;
+            res.end(JSON.stringify({ error: "Invalid api key" }));
+            return;
+        }
+
+        const repo_full_name = req.params.repo_full_name;
+        const branch = req.params.branch;
+
+        pipeline.schedule_deployment(repo_full_name, branch);
+
         res.statusCode = 200;
-        res.end(JSON.stringify(credentials));
+        res.end(JSON.stringify({}));
+
     });
 
     async function handle_bitbucket(req, res){
@@ -54,22 +68,12 @@ module.exports = function (app) {
             return;
         }
 
-        const repo_name = req.body.repository.name;
+        //const repo_name = req.body.repository.name;
         const repo_full_name = req.body.repository.full_name;
         const updated_branch = req.body.push.changes[0].new.name;
 
-        console.log(repo_name + " " + updated_branch);
+        pipeline.schedule_deployment(repo_full_name, updated_branch);
 
-        //Update projects
-        //let service = global.services.find(service => service.full_name === repo_full_name);
-        console.log(`Searching for a service with full name: ${repo_full_name}`)
-        let services = await storage.get_service_by_fullname(repo_full_name);
-        if (services != undefined && services.length == 1) {
-            let service = services[0];
-            console.log(`Found service: ${JSON.stringify(service)}`);
-            var environment = await storage.get_environment_by_branch(service.id, updated_branch);
-            storage.create_image_and_containers(service, environment);
-        }
         res.statusCode = 200;
         res.end(JSON.stringify({}));
     }
@@ -82,7 +86,7 @@ module.exports = function (app) {
             return;
         }
 
-        const repo_name = req.body.repository.name;
+        //const repo_name = req.body.repository.name;
         const repo_full_name = req.body.repository.full_name;
         const ref = req.body.ref;
         var updated_branch;
@@ -96,21 +100,18 @@ module.exports = function (app) {
             return;
         }
 
-        console.log(repo_name + " " + updated_branch);
-
-        //Update projects
-        let service = global.services.find(service => service.full_name === repo_full_name);
-        if (service != undefined) {
-            var environment = service.environments.find(environment => environment.branch === updated_branch);
-            if (environment != undefined) {
-                environment.status = "to_deploy";
-                //storage.save_services();
-            }
-        }
+        pipeline.schedule_deployment(repo_full_name, updated_branch);
 
         res.statusCode = 200;
         res.end(JSON.stringify({}));
 
     }
+
+    app.get('/deploy/credentials', async function (req, res) {
+        const ssh_pub_key = fs.readFileSync(home_dir + '/.ssh/id_rsa.pub', 'utf8');
+        const credentials = {"ssh_pub_key":ssh_pub_key,"webhook_url":`https://${global.service_node_config.domain}/deploy/${global.service_node_config.api_token}`}
+        res.statusCode = 200;
+        res.end(JSON.stringify(credentials));
+    });
 
 }

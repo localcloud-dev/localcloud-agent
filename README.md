@@ -73,7 +73,11 @@ curl https://raw.githubusercontent.com/localcloud-dev/localcloud-agent/main/publ
 ```
 **your_domain** will be used for adding new servers and local machines, and handling Bitbucket, Github and other webhooks; should be without http and https, for example: agent.test.project.com or deploy.domain.com, etc
 
-- Wait until the LocalCloud agent finishes the server provision and follow the steps in the final message. 
+- Wait until the LocalCloud agent finishes the server provision and run a command on the server
+
+```
+localcloud
+```
 
 #### How to deploy a project with the managed LocalCloud
 
