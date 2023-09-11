@@ -72,7 +72,7 @@ sudo apt update
 sudo DEBIAN_FRONTEND=noninteractive sudo apt -y install caddy
 
 #Clone LocalCloud service-node
-git clone https://coded-sh@bitbucket.org/coded-sh/service-node.git 
+git clone https://coded-sh@bitbucket.org/coded-sh/service-node.git
 
 #Install Nebula
 cd $HOME

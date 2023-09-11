@@ -4,6 +4,7 @@
 */
 
 const storage = require("../utils/storage");
+const pipeline = require("../utils/pipeline");
 const { customAlphabet } = require("nanoid");
 const nanoid = customAlphabet('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz', 11); //~117 years or 1B IDs needed, in order to have a 1% probability of at least one collision, https://zelark.github.io/nano-id-cc/
 const REGEXP_SPECIAL_CHAR = /[\!\#\$\%\^\&\*\)\(\+\=\.\<\>\{\}\[\]\:\;\'\"\|\~\`\_\-\/]/g;
@@ -14,9 +15,9 @@ module.exports = function (app) {
 
         let service_id = req.params.service_id;
         var new_environment = req.body;
-
         let services = await storage.get_service_by_id(service_id);
         if (services.length != 0){
+            let service = services[0];
             let environment = await storage.get_environment_by_branch(service_id, new_environment.branch);
 
             if (environment != null){
@@ -30,6 +31,7 @@ module.exports = function (app) {
             new_environment.id = nanoid().replace(REGEXP_SPECIAL_CHAR, '\\$&');
             new_environment.service_id = service_id;
             storage.add_environment(new_environment);
+            pipeline.schedule_deployment(service.full_name, new_environment.branch);
 
             global.logger.info(`New environment added:`);
             global.logger.info(`${JSON.stringify(new_environment)}`);

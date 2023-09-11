@@ -114,11 +114,13 @@ module.exports = function (app) {
         //Search a service with :service_id in DB and simplify the output format
         let service_id = req.params.service_id;
         let services = await storage.get_service_by_id(service_id);
-
+        let environments = await storage.get_environments_by_service_id(service_id);;
         if (services.length == 0){
             res.statusCode = 404;
             res.end(JSON.stringify({ "msg": `Service with id: ${service_id} not found.` }));
         }else{
+            let service = services[0];
+            service.environments = environments;
             res.statusCode = 200;
             res.end(JSON.stringify(services[0]));
         }

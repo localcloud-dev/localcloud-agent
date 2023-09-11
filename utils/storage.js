@@ -26,10 +26,11 @@ async function get_services(){
     );
 
     //Simplify the output format
-    let services = simplify_format(results.documents);
-    await services.forEach(async (service) => {
+    var services = simplify_format(results.documents);
+    for (var i = 0; i< services.length; i += 1){
+        var service = services[i];
         service.environments = await get_environments_by_service_id(service.id);
-    });
+    }
 
     return services;
 
