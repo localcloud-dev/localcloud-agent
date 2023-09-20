@@ -194,9 +194,9 @@ async function check_deployment_query() {
                 return false;
             }
             global.logger.info(`A free port has ben found: ${available_port}`);
-            global.logger.info(`Running a command: docker run -p ${available_port}:${service_port} -d --name ${image_id} ${image_id}`);
+            global.logger.info(`Running a command: docker run -p ${available_port}:${service_port} -d --restart unless-stopped --name ${image_id} ${image_id}`);
 
-            exec(`docker container run -p ${available_port}:${service_port} -d --name ${image_id} 192.168.202.1:7000/${image_id}`, {
+            exec(`docker container run -p ${available_port}:${service_port} -d --restart unless-stopped --name ${image_id} 192.168.202.1:7000/${image_id}`, {
                 cwd: `${homedir}`
             }, async function (err, stdout, stderr) {
                 global.logger.info(`docker run output: ${stdout}, error output: ${stderr}`);

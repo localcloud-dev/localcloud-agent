@@ -30,8 +30,8 @@ module.exports = function (app) {
             new_environment.image_status = 'to_build';
             new_environment.id = nanoid().replace(REGEXP_SPECIAL_CHAR, '\\$&');
             new_environment.service_id = service_id;
-            storage.add_environment(new_environment);
-            pipeline.schedule_deployment(service.full_name, new_environment.branch);
+            await storage.add_environment(new_environment);
+            await pipeline.schedule_deployment(service.full_name, new_environment.branch);
 
             global.logger.info(`New environment added:`);
             global.logger.info(`${JSON.stringify(new_environment)}`);

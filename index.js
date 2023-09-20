@@ -51,7 +51,7 @@ global.logger = logger;
 function log_request(req, res, next) {
   logger.info(`=======================================`);
   logger.info(`~> Request: ${req.method} on ${req.url}`);
-  if (req.body != undefined){
+  if (req.body != undefined) {
     //logger.info(`~> Body:`);
     //logger.info(`${JSON.stringify(req.body)}`);
   }
@@ -107,132 +107,119 @@ async function connect_redis() {
       name: redis_db.SchemaFieldTypes.TAG,
       id: redis_db.SchemaFieldTypes.TEXT,
     }, {
-        ON: 'HASH',
-        PREFIX: 'vpnnode',
+      ON: 'HASH',
+      PREFIX: 'vpnnode',
     });
-  
+
   } catch (e) {
     if (e.message === 'Index already exists') {
-        console.log('Index exists already, skipped creation.');
+      console.log('Index exists already, skipped creation.');
     } else {
-        // Something went wrong, perhaps RediSearch isn't installed...
-        console.error(e);
-        process.exit(1);
+      // Something went wrong, perhaps RediSearch isn't installed...
+      console.error(e);
+      process.exit(1);
     }
   }
-  
+
   try {
     await global.redis_client.ft.create('idx:services', {
       name: redis_db.SchemaFieldTypes.TAG,
       full_name: redis_db.SchemaFieldTypes.TAG,
       id: redis_db.SchemaFieldTypes.TEXT,
     }, {
-        ON: 'HASH',
-        PREFIX: 'service',
+      ON: 'HASH',
+      PREFIX: 'service',
     });
 
-} catch (e) {
+  } catch (e) {
     if (e.message === 'Index already exists') {
-        console.log('Index exists already, skipped creation.');
+      console.log('Index exists already, skipped creation.');
     } else {
-        // Something went wrong, perhaps RediSearch isn't installed...
-        console.error(e);
-        process.exit(1);
+      // Something went wrong, perhaps RediSearch isn't installed...
+      console.error(e);
+      process.exit(1);
     }
-}
+  }
 
-try {
-  await global.redis_client.ft.create('idx:environments', {
-    name: redis_db.SchemaFieldTypes.TAG,
-    branch: redis_db.SchemaFieldTypes.TAG,
-    id: redis_db.SchemaFieldTypes.TEXT,
-    service_id: redis_db.SchemaFieldTypes.TEXT,
-  }, {
+  try {
+    await global.redis_client.ft.create('idx:environments', {
+      name: redis_db.SchemaFieldTypes.TAG,
+      branch: redis_db.SchemaFieldTypes.TAG,
+      id: redis_db.SchemaFieldTypes.TEXT,
+      service_id: redis_db.SchemaFieldTypes.TEXT,
+    }, {
       ON: 'HASH',
       PREFIX: 'environment',
-  });
+    });
 
-} catch (e) {
-  if (e.message === 'Index already exists') {
+  } catch (e) {
+    if (e.message === 'Index already exists') {
       console.log('Index exists already, skipped creation.');
-  } else {
+    } else {
       // Something went wrong, perhaps RediSearch isn't installed...
       console.error(e);
       process.exit(1);
+    }
   }
-}
 
-try {
-  await global.redis_client.ft.create('idx:images', {
-    status: redis_db.SchemaFieldTypes.TAG,
-    id: redis_db.SchemaFieldTypes.TEXT,
-  }, {
+  try {
+    await global.redis_client.ft.create('idx:images', {
+      status: redis_db.SchemaFieldTypes.TAG,
+      id: redis_db.SchemaFieldTypes.TEXT,
+    }, {
       ON: 'HASH',
       PREFIX: 'image',
-  });
+    });
 
-} catch (e) {
-  if (e.message === 'Index already exists') {
+  } catch (e) {
+    if (e.message === 'Index already exists') {
       console.log('Index exists already, skipped creation.');
-  } else {
+    } else {
       // Something went wrong, perhaps RediSearch isn't installed...
       console.error(e);
       process.exit(1);
+    }
   }
-}
 
-try {
-  await global.redis_client.ft.create('idx:containers', {
-    status: redis_db.SchemaFieldTypes.TAG,
-    target: redis_db.SchemaFieldTypes.TAG,
-    id: redis_db.SchemaFieldTypes.TEXT,
-  }, {
+  try {
+    await global.redis_client.ft.create('idx:containers', {
+      status: redis_db.SchemaFieldTypes.TAG,
+      target: redis_db.SchemaFieldTypes.TAG,
+      id: redis_db.SchemaFieldTypes.TEXT,
+    }, {
       ON: 'HASH',
       PREFIX: 'container',
-  });
+    });
 
-} catch (e) {
-  if (e.message === 'Index already exists') {
+  } catch (e) {
+    if (e.message === 'Index already exists') {
       console.log('Index exists already, skipped creation.');
-  } else {
+    } else {
       // Something went wrong, perhaps RediSearch isn't installed...
       console.error(e);
       process.exit(1);
+    }
   }
-}
 
-try {
-  await global.redis_client.ft.create('idx:proxies', {
-    status: redis_db.SchemaFieldTypes.TAG,
-    domain: redis_db.SchemaFieldTypes.TAG,
-    id: redis_db.SchemaFieldTypes.TEXT,
-  }, {
+  try {
+    await global.redis_client.ft.create('idx:proxies', {
+      status: redis_db.SchemaFieldTypes.TAG,
+      domain: redis_db.SchemaFieldTypes.TAG,
+      id: redis_db.SchemaFieldTypes.TEXT,
+    }, {
       ON: 'HASH',
       PREFIX: 'proxy',
-  });
+    });
 
-} catch (e) {
-  if (e.message === 'Index already exists') {
+  } catch (e) {
+    if (e.message === 'Index already exists') {
       console.log('Index exists already, skipped creation.');
-  } else {
+    } else {
       // Something went wrong, perhaps RediSearch isn't installed...
       console.error(e);
       process.exit(1);
+    }
   }
-}
-
-  //await client.set('key', 'value');
-  /*const service_node_config = await global.redis_client.get('service_node_config');
-  if (service_node_config != undefined) {
-    global.service_node_config = JSON.parse(service_node_config);
-    global.logger.info('Loaded node config:');
-    global.logger.info(global.service_node_config);
-  } else {
-    //Create a new config file
-    //Use env.PORT.BASE_PRIVATE_IP to generate private IPs for VPN nodes
-    global.logger.info('No service_node_config has been found. Creating new...');
-    global.service_node_config.hashed_tokens = [];
-  }*/
 
   try {
     global.service_node_config = JSON.parse(fs.readFileSync(home_dir + '.deployed-config.json', 'utf8'));
@@ -261,7 +248,7 @@ try {
   } catch (err) {
     global.logger.error(`Cannot load information about this node from host.crt. Error: ${err}`);
     return;
-   }
+  }
 
   //Load VPN nodes
   var vpn_nodes = await storage.get_vpn_node_by_id(global.service_node_config.server_id);
@@ -282,18 +269,6 @@ try {
     //Load info about this server again
     vpn_nodes = await storage.get_vpn_node_by_id(global.service_node_config.server_id);
   }
-
-  //Load Services
-  global.services = [];
-  /*const services = await global.redis_client.get('services');
-  if (services != undefined) {
-    global.services = JSON.parse(services);
-    global.logger.info('Loaded Services');
-    global.logger.info(global.services);
-  } else {
-    global.logger.info('No stored Services found');
-    global.services = [];
-  }*/
 
   //Load Tunnels
   const tunnels = await global.redis_client.get('tunnels');
@@ -326,7 +301,7 @@ try {
   //Load other modules
   const proxy = require("./routes/proxy");
   proxy.create_routes(app);
-  
+
   //ToDo: Only load balancers and build machines can have public domains
   if (vpn_nodes.length > 0 && (vpn_nodes[0].type.includes("load_balancer") == true || vpn_nodes[0].type.indexOf("build_machine") == true)) {
     setInterval(proxy.proxy_reload, 2000);

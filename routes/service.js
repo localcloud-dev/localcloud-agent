@@ -43,9 +43,7 @@ module.exports = function (app) {
         const repository_full_name = `${repository_workspace}/${repository_name}`;
 
         //Check if we have a service with this name
-        //If we have the user should send PUT /service to update the project
-        //let saved_service = global.services.find(project => project.git_url === git_url);
-        
+        //If we have the user should send PUT /service to update the project        
         let result = await global.redis_client.ft.search(
             'idx:services',
             `@name: {${repository_name.replace(REGEXP_SPECIAL_CHAR, '\\$&')}}`
@@ -139,25 +137,6 @@ module.exports = function (app) {
             res.statusCode = 200;
             res.end();
         }
-
-        //We should check that there are no any environments in this service
-        //Now we can remove only a service without environments
-        /*let service = global.services.find(service => service.id === service_id);
-        if (service != undefined) {
-            if (service.environments.length != 0) {
-                res.statusCode = 403;
-                res.end(JSON.stringify({ "msg": `Cannot remove a service ${service.name} because it has environments. Remove all service's environments at first and then try again.` }));
-                return;
-            }
-        }
-
-        let index = global.services.find(service => service.id === service_id);
-        global.services.splice(index, 1);
-        storage.save_services();
-
-        global.logger.info(`Service: ${service_id} has been removed`);
-        res.statusCode = 200;
-        res.end("");*/
 
     });
 
