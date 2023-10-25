@@ -2,7 +2,7 @@
 
 # LocalCloud | Server Agent
 
-[LocalCloud](https://localcloud.dev) is the multi-cloud developer-friendly secure Platform as a service (PaaS).
+[LocalCloud](https://localcloud.dev) is an open source alternative to [Heroku](https://www.heroku.com/), [Render](https://render.com/), [Platform.sh](https://platform.sh/) and other proprietary PaaS. [LocalCloud](https://localcloud.dev) is even more - a multi-cloud PaaS with autoscaling, CI/CD, TLS certificates, VPN and localhost tunnels without any vendor lock-in. Deploy web and IoT projects on virtually any cloud provider/Raspberry Pi in minutes.
 
 More info about the project: [localcloud.dev](https://localcloud.dev)
 
@@ -79,10 +79,13 @@ curl https://raw.githubusercontent.com/localcloud-dev/localcloud-agent/main/publ
 localcloud
 ```
 
-#### How to deploy a project with the managed LocalCloud
+#### How to deploy a project with the managed LocalCloud?
 
-- Will be available from September, 2023
+- Will be available from October, 2023
 
+#### When the Web Console will be available?
+
+- From October, 2023
 
 ### License
 

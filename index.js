@@ -7,8 +7,26 @@ const home_dir = `${os.homedir()}/`;
 const polka = require('polka');
 const app = polka();
 
-const { json } = require('body-parser');
+//Enable CORS for API
 const cors = require('cors');
+const allowedOrigins = [
+  'http://localhost:4003', //local development
+  'https://console.localcloud.dev'
+];
+
+app.use(cors({
+  credentials: true, origin: function (origin, callback) {
+    // allow requests with no origin 
+    // (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.indexOf(origin) === -1) {
+      var msg = 'The CORS policy for this site does not ' +
+        'allow access from the specified Origin.';
+      return callback(new Error(msg), false);
+    }
+    return callback(null, true);
+  }
+}));
 
 const crypto = require('crypto');
 const bcrypt = require('bcrypt');
@@ -19,7 +37,7 @@ const fs = require('fs');
 const auth = require("./utils/auth");
 const { execSync } = require('child_process');
 
-app.use(cors());
+const { json } = require('body-parser');
 app.use(json());
 
 //Create logger
