@@ -8,6 +8,7 @@ const pipeline = require("../utils/pipeline");
 const { customAlphabet } = require("nanoid");
 const nanoid = customAlphabet('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz', 11); //~117 years or 1B IDs needed, in order to have a 1% probability of at least one collision, https://zelark.github.io/nano-id-cc/
 const REGEXP_SPECIAL_CHAR = /[\!\#\$\%\^\&\*\)\(\+\=\.\<\>\{\}\[\]\:\;\'\"\|\~\`\_\-\/]/g;
+const proxy = require("./proxy");
 
 module.exports = function (app) {
 
@@ -57,6 +58,9 @@ module.exports = function (app) {
             let service = services[0];
             let environment = service.environments.find(environment => environment.name === environment_name);
             if (environment != undefined) {
+                //Delete a Proxy record related to this environment
+                await proxy.delete_proxy(environment.domain);
+
                 //We should plan to remove this environment here
                 environment.status = `to_remove`;
                 storage.update_environment_status(environment);

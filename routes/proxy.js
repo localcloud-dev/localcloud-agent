@@ -32,6 +32,11 @@ async function create_routes(app) {
 
 }
 
+async function delete_proxy(domain){
+    await storage.delete_proxy(domain);
+    update_proxy_config();
+}
+
 async function proxy_reload() {
     //We update proxy configuration file and reload it in 2 cases
     //- there is no a configuration file yet
@@ -108,4 +113,4 @@ ${tunnel.domain} {
     });
 };
 
-module.exports = { proxy_reload, create_routes };
+module.exports = { proxy_reload, create_routes, delete_proxy };
