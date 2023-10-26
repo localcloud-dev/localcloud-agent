@@ -22,6 +22,9 @@ async function check_deployment_query() {
 
         //Check if there are any containers that should be deployed on this server
         check_deploy_container(vpn_nodes[0]);
+
+        //Check if there are containers that should be removed
+        check_remove_containers(vpn_nodes[0]);
     }
 
     async function check_build_image(me_node) {
@@ -183,16 +186,6 @@ async function check_deployment_query() {
         }
     }
 
-    async function check_remove_environment(me_node) {
-        //To remove an environment we should:
-        //- Find an environment with status "to_remove"
-        //- Find all containers linked to that environment and server where this code is running
-        //- Stop and remove those containers
-        //- Notify lighthouses that containers have been removed
-        
-
-    }
-
     async function run_container(service_port, image_id, container, me_node, environment) {
         //Getting a free port and starting a container
         portfinder.getPort({
@@ -229,6 +222,18 @@ async function check_deployment_query() {
                 }
             });
         });
+    }
+
+    async function check_remove_containers(me_node) {
+        //To remove a container we should:
+        //- Find a container with status "to_remove" and target == this server id
+        //- Set container.status to "removing"
+        //- Stop and remove this container
+        //- Notify a lighthouse that this container have been removed
+        //- A lighthouse that a container has been stopped and removed
+        //- A lighthouse set status of a container to "removed"
+
+
     }
 }
 

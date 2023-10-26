@@ -61,6 +61,18 @@ module.exports = function (app) {
                 environment.status = `to_remove`;
                 storage.update_environment_status(environment);
                 global.logger.info(`Environment: ${environment_name} in the service with id: ${service_id} has been planned for removing`);
+
+                //Plan to remove all containers with environment_id == this environment id
+                //Update status of a container only if the current status != "to_remove"
+                
+                let containers_to_remove = await storage.get_containers_by_environment_id(environment_id);
+                containers_to_remove.forEach(async (container) => {
+                    if (container.status != "to_remove"){
+                        await storage.update_container_status(container.id, "to_remove");
+                        global.logger.info(`Container with id: ${container.id} environment_id:${container.environment_id} target_id:${container.target} has been planned for removing`);
+                    }
+                });
+
                 res.statusCode = 200;
                 res.end("");  
             }else{

@@ -37,8 +37,14 @@ async function get_service_by_id(service_id){
         `@id: /${service_id}/`
     );
 
+    var services = simplify_format(results.documents);
+    for (var i = 0; i< services.length; i += 1){
+        var service = services[i];
+        service.environments = await get_environments_by_service_id(service.id);
+    }
+
     //Simplify the output format
-    return simplify_format(results.documents);
+    return services;
 }
 
 async function get_service_by_fullname(full_name){   
