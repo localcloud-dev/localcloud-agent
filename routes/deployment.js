@@ -199,14 +199,14 @@ async function check_deployment_query() {
             global.logger.info(`A free port has ben found: ${available_port}`);
             global.logger.info(`Running a command: docker run -p ${available_port}:${service_port} -d --restart unless-stopped --name ${image_id} ${image_id}`);
 
-            exec(`docker container run -p ${available_port}:${service_port} -d --restart unless-stopped --name ${image_id} 192.168.202.1:7000/${image_id}`, {
+            exec(`docker container run -p ${available_port}:${service_port} -d --restart unless-stopped --name ${container.id} 192.168.202.1:7000/${image_id}`, {
                 cwd: `${homedir}`
             }, async function (err, stdout, stderr) {
                 global.logger.info(`docker run output: ${stdout}, error output: ${stderr}`);
 
                 if (err == undefined || err == null) {
 
-                    global.logger.info(`Container ${image_id} has been started`);
+                    global.logger.info(`Container ${container.id} has been started`);
                     request
                                 .post(`http://192.168.202.1:5005/proxy`)
                                 .send({ container_id: container.id, workload_ip: me_node.ip, port: available_port, domain: environment.domain }) // sends a JSON post body
@@ -232,8 +232,35 @@ async function check_deployment_query() {
         //- Notify a lighthouse that this container have been removed
         //- A lighthouse that a container has been stopped and removed
         //- A lighthouse set status of a container to "removed"
+        let conatainers_to_remove = await storage.get_containers_by_status_and_target_id("to_remove", me_node.id);
+        conatainers_to_remove.forEach(async (container) => {
+            //Stop and remove a container
+            await storage.update_container_status(container.id, "removing");
 
+            global.logger.info(`Removing container ${container.id} with 'docker rm'`);
 
+            exec(`docker rm -f ${container.id}`, {
+                cwd: `${homedir}`
+            }, async function (err, stdout, stderr) {
+                global.logger.info(`'docker rm' output: ${stdout}, error output: ${stderr}`);
+                if (err == undefined || err == null) {
+                    await storage.update_container_status(container.id, "removed");
+                    global.logger.info(`Container ${container.id} has been removed`);
+
+                    //We should send a request to one of Redis shards to update a container's status
+                    request.post(`http://192.168.202.1:5005/container/status`)
+                                .send({ container_id: container.id, status: "removed"})
+                                .set('accept', 'json')
+                                .retry(150)
+                                .end(function (err, res) {
+                                    console.log(`\nMessage to update a status of container: ${container.id} to a new status "removed" has been sent.\n`);
+                                });
+                    return true;
+                } else {
+                    return false;
+                }
+            });
+        });
     }
 }
 
