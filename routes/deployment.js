@@ -166,7 +166,7 @@ async function check_deployment_query() {
                     global.logger.info(`Deploying on server: ${me_node.id}: ${me_node.ip}`);
                     //Pull a container from a container registry
                     //We set --tls-verify=false because we push to localhost
-                    //Also all traffic between servers within VPN is encrypted
+                    //All traffic between servers within VPN is encrypted that's why we can use -tls-verify=false
                     global.logger.info(`Pulling a container: ${image_id}`);
                     exec(`docker image pull 192.168.202.1:7000/${image_id}`, {
                         cwd: `${homedir}`
@@ -181,6 +181,16 @@ async function check_deployment_query() {
                 }
             })
         }
+    }
+
+    async function check_remove_environment(me_node) {
+        //To remove an environment we should:
+        //- Find an environment with status "to_remove"
+        //- Find all containers linked to that environment and server where this code is running
+        //- Stop and remove those containers
+        //- Notify lighthouses that containers have been removed
+        
+
     }
 
     async function run_container(service_port, image_id, container, me_node, environment) {

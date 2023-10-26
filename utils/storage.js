@@ -157,7 +157,7 @@ async function create_image_and_containers(service, environment){
     let image_id = await add_image(service, environment);
     environment.servers.forEach(async (server) => {
         console.log(`Create a new container record in DB`);
-        await add_container(image_id, server.id)
+        await add_container(image_id, server.id, environment.id)
     });
 }
 
@@ -210,12 +210,13 @@ async function update_image_status(image_id, status){
 }
 
 //Container Records
-async function add_container(image_id, target_server_id){
+async function add_container(image_id, target_server_id, environment_id){
     let container_id = nanoid();
     await global.redis_client.hSet(`container:${container_id}`, {
         id: container_id,
         image_id: image_id,
         target: target_server_id,
+        environment_id: environment_id,
         status: "to_do"
     })
 }
@@ -244,6 +245,16 @@ async function get_containers_by_status_and_target_id(status, target_id){
     let results = await global.redis_client.ft.search(
         'idx:containers',
         `@status: {${status.replace(REGEXP_SPECIAL_CHAR, '\\$&')}} @target: {${target_id.replace(REGEXP_SPECIAL_CHAR, '\\$&')}}`
+    ); 
+
+    //Simplify the output format
+    return simplify_format(results.documents);
+}
+
+async function get_containers_by_environment_id(environment_id){
+    let results = await global.redis_client.ft.search(
+        'idx:containers',
+        `@environment_id: {${environment_id.replace(REGEXP_SPECIAL_CHAR, '\\$&')}}`
     ); 
 
     //Simplify the output format
@@ -349,4 +360,4 @@ function simplify_format(documents){
     return services;
 }
 
-module.exports = {add_proxy, get_proxies, get_proxies_by_status, update_proxy_status, create_image_and_containers, add_container, get_containers, get_containers_by_status, get_containers_by_status_and_target_id, update_container_status, add_environment, remove_environment, update_environment_status, get_environment_by_branch, get_environments_by_service_id, get_environment_by_id, save_tunnels, save_config, add_service, get_services, get_service_by_id, get_service_by_fullname, remove_service_by_id, add_vpn_node, get_vpn_nodes, get_vpn_node_by_id, add_image, get_image_by_id, get_images, get_images_by_status, update_image_status}
+module.exports = {add_proxy, get_proxies, get_proxies_by_status, update_proxy_status, create_image_and_containers, add_container, get_containers, get_containers_by_status, get_containers_by_status_and_target_id, update_container_status, add_environment, remove_environment, update_environment_status, get_environment_by_branch, get_environments_by_service_id, get_environment_by_id, get_containers_by_environment_id, save_tunnels, save_config, add_service, get_services, get_service_by_id, get_service_by_fullname, remove_service_by_id, add_vpn_node, get_vpn_nodes, get_vpn_node_by_id, add_image, get_image_by_id, get_images, get_images_by_status, update_image_status}

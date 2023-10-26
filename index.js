@@ -203,6 +203,7 @@ async function connect_redis() {
     await global.redis_client.ft.create('idx:containers', {
       status: redis_db.SchemaFieldTypes.TAG,
       target: redis_db.SchemaFieldTypes.TAG,
+      environment_id: redis_db.SchemaFieldTypes.TAG,
       id: redis_db.SchemaFieldTypes.TEXT,
     }, {
       ON: 'HASH',

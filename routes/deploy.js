@@ -11,7 +11,6 @@ const home_dir = `${require('os').homedir()}`;
 module.exports = function (app) {
 
     //Handles Webhooks from Git repository
-    //Now only Bitbucket repositories are supported
     app.post('/deploy/:api_token', async function (req, res) {
 
         //Git services doesn't send any custom headers that's why we can use only api_token in URL and add it to headers here
