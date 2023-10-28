@@ -16,22 +16,7 @@ You can use LocalCloud with virtually any cloud provider. You can even deploy on
 
 #### Developer-friendly
 
-LocalCloud is the API-driven platform. This means that you can do everything using API. Of course, you still can use CLI to manage your projects. For example, you can deploy your webserver with a Dockerfile inside a webserver's repository on a cloud server in just one request:
-
-**API Request Example:**
-```
-
-curl -XPOST -H "Content-type: application/json" -d '{
-    "git_url":"git@bitbucket.org:company/repository.git",
-    "environments":[{
-        "name":"master",
-        "branch":"master",
-        "domain":"project.yourdomain.com",
-        "port":"4008"
-    }]
-}' 'https://project.yourdomain.com/service'
-
-```
+LocalCloud is the API-driven platform. This means that you can do everything using API. Of course, you still can use CLI to manage your projects. For example, you can deploy your webserver with a Dockerfile inside a webserver's repository on a cloud server in just one request.
 
 
 #### Secure
@@ -43,10 +28,10 @@ By default LocalCloud creates VPN (virtual private network) with cloud servers (
 
 - No-Ops & no infrastructure management
 - Static websites, Node.js, Golang and virually any runtime environment
-- CI & CD
+- CI & CD are included
 - Exposing local webservers via a public URL with automatic HTTPS and custom domain
 - HTTPS-enabled custom domains
-- Works with virtually any VPS / cloud / dedicated server with Ubuntu 22.04 LTS
+- Works with virtually any VPS / cloud / dedicated server with Ubuntu 22.04 LTS so you can select any cloud provider
 - Unlimited environments for each project
 - Custom domain for each environment
 - GitOps or Push-to-Deploy
@@ -69,7 +54,7 @@ LocalCloud uses Git to manage deployment that's why you don’t need to learn ne
 - SSH into your server
 - Install the LocalCloud agent on this server (replace "your_domain" with your domain, for the example in the step 1 it could be agent.test.project.com):
 ```
-curl https://raw.githubusercontent.com/localcloud-dev/localcloud-agent/main/public/provision/deployed-service-node-install.sh | sh -s your_domain
+curl https://localcloud.dev/install | sh -s your_domain
 ```
 **your_domain** will be used for adding new servers and local machines, and handling Bitbucket, Github and other webhooks; should be without http and https, for example: agent.test.project.com or deploy.domain.com, etc
 
@@ -85,7 +70,7 @@ localcloud
 
 #### When the Web Console will be available?
 
-- From October, 2023
+- November, 2023
 
 ### License
 

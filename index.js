@@ -184,6 +184,7 @@ async function connect_redis() {
     await global.redis_client.ft.create('idx:images', {
       status: redis_db.SchemaFieldTypes.TAG,
       id: redis_db.SchemaFieldTypes.TEXT,
+      environment_id: redis_db.SchemaFieldTypes.TAG,
     }, {
       ON: 'HASH',
       PREFIX: 'image',
@@ -312,6 +313,8 @@ async function connect_redis() {
   require("./routes/deploy")(app);
   require("./routes/vpn")(app);
   require("./routes/environment")(app);
+  require("./routes/container")(app);
+  require("./routes/image")(app);
 
   //Create routes
   const deployment = require("./routes/deployment");

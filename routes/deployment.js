@@ -23,8 +23,11 @@ async function check_deployment_query() {
         //Check if there are any containers that should be deployed on this server
         check_deploy_container(vpn_nodes[0]);
 
-        //Check if there are containers that should be removed
-        check_remove_containers(vpn_nodes[0]);
+        //Check if there are containers that should be deleted
+        check_delete_containers(vpn_nodes[0]);
+
+        //Check if there are images that should be deleted
+        check_delete_images(vpn_nodes[0]);
     }
 
     async function check_build_image(me_node) {
@@ -224,7 +227,7 @@ async function check_deployment_query() {
         });
     }
 
-    async function check_remove_containers(me_node) {
+    async function check_delete_containers(me_node) {
         //To remove a container we should:
         //- Find a container with status "to_remove" and target == this server id
         //- Set container.status to "removing"
@@ -261,6 +264,48 @@ async function check_deployment_query() {
                 }
             });
         });
+    }
+
+    async function check_delete_images(me_node) {
+        //To remove an image we should:
+        //- Check that we're on a server with type "build_machine"
+        //- Find an image with status "to_remove"
+        //- Set image.status to "removing"
+        //- Delete this container
+        //- A lighthouse removes a "Image" record from a database
+        if (JSON.parse(me_node.type).indexOf("build_machine") != -1) {
+            let images_to_remove = await storage.get_images_by_status("to_remove");
+
+            images_to_remove.forEach(async (image) => {
+            await storage.update_image_status(image.id, "removing");
+
+            global.logger.info(`Deleting image ${image.id} with 'docker image rm'`);
+
+            //Delete image
+            exec(`docker image rm -f ${image.id} 192.168.202.1:7000/${image.id} localhost:7000/${image.id}`, {
+                cwd: `${homedir}`
+            }, async function (err, stdout, stderr) {
+                global.logger.info(`'docker image rm' output: ${stdout}, error output: ${stderr}`);
+                if (err == undefined || err == null) {
+                    await storage.update_image_status(container.id, "removed");
+                    global.logger.info(`Image ${image.id} has been deleted`);
+
+                    //We should send a request to one of Redis shards to update a container's status
+                    request.post(`http://192.168.202.1:5005/image/status`)
+                                .send({ image_id: image.id, status: "removed"})
+                                .set('accept', 'json')
+                                .retry(150)
+                                .end(function (err, res) {
+                                    console.log(`\nMessage to update a status of image: ${image.id} to a new status "removed" has been sent.\n`);
+                                });
+                    return true;
+                } else {
+                    return false;
+                }
+            });
+        });
+
+        }
     }
 }
 

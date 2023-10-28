@@ -61,21 +61,28 @@ module.exports = function (app) {
                 //Delete a Proxy record related to this environment
                 await proxy.delete_proxy(environment.domain);
 
-                //We should plan to remove this environment here
-                environment.status = `to_remove`;
-                storage.update_environment_status(environment);
-                global.logger.info(`Environment: ${environment_name} in the service with id: ${service_id} has been planned for removing`);
-
                 //Plan to remove all containers with environment_id == this environment id
                 //Update status of a container only if the current status != "to_remove"
                 
-                let containers_to_remove = await storage.get_containers_by_environment_id(environment_id);
+                let containers_to_remove = await storage.get_containers_by_environment_id(environment.id);
                 containers_to_remove.forEach(async (container) => {
                     if (container.status != "to_remove"){
                         await storage.update_container_status(container.id, "to_remove");
                         global.logger.info(`Container with id: ${container.id} environment_id:${container.environment_id} target_id:${container.target} has been planned for removing`);
                     }
                 });
+
+                let images_to_remove = await storage.get_images_by_environment_id(environment.id);
+                images_to_remove.forEach(async (image) => {
+                    if (image.status != "to_remove"){
+                        await storage.update_image_status(image.id, "to_remove");
+                        global.logger.info(`Image with id: ${image.id} environment_id:${image.environment_id} has been planned for deleting`);
+                    }
+                });
+
+                //Delete this environment
+                storage.delete_environment_by_id(environment.id);
+                global.logger.info(`Environment: ${environment_name} in the service with id: ${service_id} has been deleted`);
 
                 res.statusCode = 200;
                 res.end("");  

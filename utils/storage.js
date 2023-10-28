@@ -81,8 +81,8 @@ async function update_environment_status(environment_id, status){
     })
 }
 
-async function remove_environment(service, environment){
-    //Now we just update a record in DB, all workloads will get replicas of this record
+async function delete_environment_by_id(environment_id){
+    await global.redis_client.del(`environment:${environment_id}`);
 }
 
 async function get_environment_by_branch(service_id, branch){   
@@ -195,6 +195,16 @@ async function get_image_by_id(image_id){
         'idx:images',
         `@id: /${image_id}/`
     );
+    //Simplify the output format
+    return simplify_format(results.documents);
+}
+
+async function get_images_by_environment_id(environment_id){
+    let results = await global.redis_client.ft.search(
+        'idx:images',
+        `@environment_id: {${environment_id.replace(REGEXP_SPECIAL_CHAR, '\\$&')}}`
+    ); 
+
     //Simplify the output format
     return simplify_format(results.documents);
 }
@@ -373,4 +383,4 @@ function simplify_format(documents){
     return services;
 }
 
-module.exports = {add_proxy, delete_proxy, get_proxies, get_proxies_by_status, update_proxy_status, create_image_and_containers, add_container, get_containers, get_containers_by_status, get_containers_by_status_and_target_id, update_container_status, add_environment, remove_environment, update_environment_status, get_environment_by_branch, get_environments_by_service_id, get_environment_by_id, get_containers_by_environment_id, save_tunnels, save_config, add_service, get_services, get_service_by_id, get_service_by_fullname, remove_service_by_id, add_vpn_node, get_vpn_nodes, get_vpn_node_by_id, add_image, get_image_by_id, get_images, get_images_by_status, update_image_status}
+module.exports = {add_proxy, delete_proxy, get_proxies, get_proxies_by_status, update_proxy_status, create_image_and_containers, add_container, get_containers, get_containers_by_status, get_containers_by_status_and_target_id, update_container_status, add_environment, delete_environment_by_id, update_environment_status, get_environment_by_branch, get_environments_by_service_id, get_environment_by_id, get_containers_by_environment_id, save_tunnels, save_config, add_service, get_services, get_service_by_id, get_service_by_fullname, remove_service_by_id, add_vpn_node, get_vpn_nodes, get_vpn_node_by_id, add_image, get_image_by_id, get_images, get_images_by_status, get_images_by_environment_id, update_image_status}

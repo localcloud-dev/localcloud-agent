@@ -6,11 +6,14 @@
 #$1 - join
 #$2 - url to download a zip archive with certificates
 
-if [ -z "$1" ]; then
-  echo "Enter a domain for LocalCloud Agent (for example, localcloud.domain.com, DNS A record for this domain name should be pointed to IP address of this server). The domain will be used for adding new servers/local machines and for deployment webhooks (for example, for deploying changes after you push code to GitHub/Bitbucket). More information can be found at https://localcloud.dev/docs"
-  read domain
-else
-  domain = $1
+if [ -z "$1" ]
+then
+  echo ""
+  echo ""
+  echo "No domain is specified in the command. Use 'curl https://localcloud.dev/install | sh -s your_domain'.  Where your_domain is, for example, localcloud.domain.com; DNS A record for this domain name should be pointed to IP address of this server. The domain will be used for adding new servers/local machines and for deployment webhooks (for example, for deploying changes after you push code to GitHub/Bitbucket). More information can be found at https://localcloud.dev/docs"
+  echo ""
+  echo ""
+  exit 0
 fi
 
 echo "Installing LocalCloud Agent ..."
@@ -206,7 +209,7 @@ else
     npm install
 
     sudo echo -e "[Unit]\nDescription=LocalCloud Agent\nWants=basic.target network-online.target nss-lookup.target time-sync.target\nAfter=basic.target network.target network-online.target" >> /etc/systemd/system/localcloud-agent.service
-    sudo echo -e "[Service]\nSyslogIdentifier=localcloud-agent\nExecStart=/usr/bin/node $HOME/service-node/index.js\nRestart=always\nEnvironment=SERVICE_NODE_DOMAIN=$domain" >> /etc/systemd/system/localcloud-agent.service
+    sudo echo -e "[Service]\nSyslogIdentifier=localcloud-agent\nExecStart=/usr/bin/node $HOME/service-node/index.js\nRestart=always\nEnvironment=SERVICE_NODE_DOMAIN=$1" >> /etc/systemd/system/localcloud-agent.service
     sudo echo -e "[Install]\nWantedBy=multi-user.target" >> /etc/systemd/system/localcloud-agent.service
     sudo systemctl enable localcloud-agent.service
     sudo systemctl start localcloud-agent.service
