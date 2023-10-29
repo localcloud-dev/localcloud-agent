@@ -282,7 +282,7 @@ async function check_deployment_query() {
             global.logger.info(`Deleting image ${image.id} with 'docker image rm'`);
 
             //Delete image
-            exec(`docker image rm -f ${image.id} 192.168.202.1:7000/${image.id} localhost:7000/${image.id}`, {
+            exec(`docker image rm -f ${image.id} localhost:7000/${image.id} 192.168.202.1:7000/${image.id}`, {
                 cwd: `${homedir}`
             }, async function (err, stdout, stderr) {
                 global.logger.info(`'docker image rm' output: ${stdout}, error output: ${stderr}`);
