@@ -128,14 +128,20 @@ module.exports = function (app) {
 
         let service_id = req.params.service_id;
         let services = await storage.get_service_by_id(service_id);
-        
+
         if (services.length == 0){
             res.statusCode = 404;
             res.end(JSON.stringify({ "msg": `Service with id: ${service_id} not found.` }));
         }else{
-            await storage.remove_service_by_id(service_id);
-            res.statusCode = 200;
-            res.end();
+            let environments = await storage.get_environments_by_service_id(service_id);
+            if (environments.length > 0){
+                res.statusCode = 405;
+                res.end(JSON.stringify({ "msg": `You should delete all environments before deleting this service/app.` }));
+            }else{
+                await storage.remove_service_by_id(service_id);
+                res.statusCode = 200;
+                res.end();
+            }
         }
 
     });
