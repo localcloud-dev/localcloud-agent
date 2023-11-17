@@ -63,10 +63,9 @@ curl https://localcloud.dev/install | sh -s your_domain
 ```
 localcloud
 ```
+#### When the managed (cloud version) LocalCloud will be available?
 
-#### How to deploy a project with the managed LocalCloud?
-
-- Will be available from October, 2023
+- November, 2023
 
 #### When the Web Console will be available?
 
