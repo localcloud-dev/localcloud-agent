@@ -75,6 +75,11 @@ async function update_proxy_config() {
     reverse_proxy /join_vpn/* localhost:${service_node_config.port}
     reverse_proxy * abort
 }
+
+192.168.202.1.localcloud.sh {
+    reverse_proxy * localhost:5005
+    tls /etc/ssl/vpn_fullchain.pem /etc/ssl/vpn_private.key
+}
 `;
 
     //Fill services

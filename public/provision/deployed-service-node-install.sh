@@ -237,6 +237,11 @@ if [ "$1" = "join" ]; then
 else
 
     cd $HOME
+
+    #Download TLS certificates for the web console
+    sudo wget https://localcloud.dev/local_vpn_certificate -O /etc/ssl/vpn_fullchain.pem
+    sudo wget https://localcloud.dev/local_vpn_key -O /etc/ssl/vpn_private.key
+
     caddy reload
 
     #Start Docker container registry, in the current version the first server/root server is a build machine as well
