@@ -59,7 +59,14 @@ if [ "$1" = "join" ]; then
     sudo sh -c -e "echo '[Service]\nSyslogIdentifier=nebula\nExecReload=/bin/kill -HUP $MAINPID\nExecStart=/usr/local/bin/nebula -config /etc/nebula/config.yaml\nRestart=always' >> /etc/systemd/system/localcloud-nebula.service"
     sudo sh -c -e "echo '[Install]\nWantedBy=multi-user.target' >> /etc/systemd/system/localcloud-nebula.service"
 
-    sudo systemctl enable localcloud-nebula.service
+    STATUS="$(systemctl is-active localcloud-nebula.service)"
+    if [ "${STATUS}" = "active" ]; then
+        #systemctl reload doesn't work for Nebula, that's why we should stop/start the daemon if localcloud-cli already installed on this machine
+        sudo systemctl stop localcloud-nebula.service
+    else 
+        sudo systemctl enable localcloud-nebula.service
+    fi
+
     sudo systemctl start localcloud-nebula.service
 
 fi

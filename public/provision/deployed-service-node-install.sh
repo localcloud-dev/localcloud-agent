@@ -136,6 +136,7 @@ if [ "$1" = "join" ]; then
 
     #Use Redis instance as a replica
     sudo echo -e "\nreplica-read-only no\nreplicaof 192.168.202.1 6379" >> /etc/redis-stack.conf
+    sudo systemctl enable redis-stack-server
     sudo systemctl restart redis-stack-server
     
     #Waiting for Redis
@@ -201,6 +202,7 @@ else
 
     #Redis config for replicas
     sudo echo -e "\nreplica-read-only no\nbind 127.0.0.1 192.168.202.1\nprotected-mode no" >> /etc/redis-stack.conf
+    sudo systemctl enable redis-stack-server
     sudo systemctl restart redis-stack-server
 
     #Start LocalCloud agent
@@ -246,7 +248,7 @@ else
 
     #Start Docker container registry, in the current version the first server/root server is a build machine as well
     #We'll add special build nodes/machines in next version
-    sudo docker container run -dt -p 7000:5000 --name depl-registry --volume depl-registry:/var/lib/registry:Z docker.io/library/registry:2
+    sudo docker container run -dt -p 7000:5000 --restart unless-stopped --name depl-registry --volume depl-registry:/var/lib/registry:Z docker.io/library/registry:2
 
     echo ""
     echo ""

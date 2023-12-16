@@ -76,7 +76,7 @@ async function update_proxy_config() {
     reverse_proxy * abort
 }
 
-192.168.202.1.localcloud.sh {
+192.168.202.1.localcloud.dev {
     reverse_proxy * localhost:5005
     tls /etc/ssl/vpn_fullchain.pem /etc/ssl/vpn_private.key
 }

@@ -4,29 +4,33 @@ dotenv.config();
 const os = require('os');
 const home_dir = `${os.homedir()}/`;
 
+const http = require('http');
+const server = http.createServer();
+
 const polka = require('polka');
-const app = polka();
+const app = polka({server});
 
-//Enable CORS for API
-const cors = require('cors');
-const allowedOrigins = [
-  'http://localhost:4003', //local development
-  'https://console.localcloud.dev'
-];
+const {WebSocketServer} = require ('ws');
+//Websocket
+const wss = new WebSocketServer({ server });
+wss.on('connection', function connection(ws) {
+  ws.on('error', console.error);
 
-app.use(cors({
-  credentials: true, origin: function (origin, callback) {
-    // allow requests with no origin 
-    // (like mobile apps or curl requests)
-    if (!origin) return callback(null, true);
-    if (allowedOrigins.indexOf(origin) === -1) {
-      var msg = 'The CORS policy for this site does not ' +
-        'allow access from the specified Origin.';
-      return callback(new Error(msg), false);
-    }
-    return callback(null, true);
-  }
-}));
+  ws.on('message', function message(data) {
+    console.log('received: %s', data);
+  });
+
+  ws.send('something');
+});
+
+//Start journalctl monitor
+const Journalctl = require('./utils/journalctl-monitor');
+const journalctl = new Journalctl({
+  unit: ['localcloud-nebula.service', 'docker.service',/*'localcloud-agent.service'*/]
+});
+journalctl.on('event', (event) => {
+  console.log(event);
+});
 
 const crypto = require('crypto');
 const bcrypt = require('bcrypt');
@@ -81,6 +85,11 @@ function log_request(req, res, next) {
 //Add Content-Type: application/json to all responses
 function add_response_headers(req, res, next) {
   res.setHeader('Content-Type', 'application/json');
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'HEAD, OPTIONS, POST, GET, DELETE, PUT');
+  res.setHeader('Access-Control-Allow-Headers', '*');
+  res.setHeader('Access-Control-Request-Private-Network', 'true');
+  res.setHeader('Access-Control-Allow-Private-Network', 'true');
   next(); // move on
 }
 
@@ -338,6 +347,11 @@ async function connect_redis() {
   app.get('/hey', (req, res) => {
     res.statusCode = 200;
     res.end(JSON.stringify({ message: `I'm fine!` }));
+  });
+
+  app.options('/*', (req, res) => {
+    res.statusCode = 204;
+    res.end();
   });
 
   app.listen(global.service_node_config.port, err => {
