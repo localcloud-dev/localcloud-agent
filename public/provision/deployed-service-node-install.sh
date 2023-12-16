@@ -159,11 +159,11 @@ if [ "$1" = "join" ]; then
 
     #We don't set a public domain for the non-first server now because the current version has just one load balancer and build machine
     #Will be improved in next versions
-    cd $HOME/service-node
+    cd $HOME/localcloud-agent
     npm install
 
     sudo echo -e "[Unit]\nDescription=LocalCloud Agent\nWants=basic.target network-online.target nss-lookup.target time-sync.target\nAfter=basic.target network.target network-online.target" >> /etc/systemd/system/localcloud-agent.service
-    sudo echo -e "[Service]\nSyslogIdentifier=localcloud-agent\nExecStart=/usr/bin/node $HOME/service-node/index.js\nRestart=always" >> /etc/systemd/system/localcloud-agent.service
+    sudo echo -e "[Service]\nSyslogIdentifier=localcloud-agent\nExecStart=/usr/bin/node $HOME/localcloud-agent/index.js\nRestart=always" >> /etc/systemd/system/localcloud-agent.service
     sudo echo -e "[Install]\nWantedBy=multi-user.target" >> /etc/systemd/system/localcloud-agent.service
     sudo systemctl enable localcloud-agent.service
     sudo systemctl start localcloud-agent.service
@@ -181,10 +181,10 @@ else
     sudo ./nebula-cert sign -name "$UUID" -ip "192.168.202.1/24"
     #./nebula-cert sign -name "local_machine_1" -ip "192.168.202.2/24" -groups "devs"
 
-    cp service-node/public/provision/nebula_lighthouse_config.yaml lighthouse_config.yaml
+    cp localcloud-agent/public/provision/nebula_lighthouse_config.yaml lighthouse_config.yaml
     sed -i -e "s/{{lighthouse_ip}}/$server_ip/g" lighthouse_config.yaml
 
-    cp service-node/public/provision/nebula_node_config.yaml node_config.yaml
+    cp localcloud-agent/public/provision/nebula_node_config.yaml node_config.yaml
     sed -i -e "s/{{lighthouse_ip}}/$server_ip/g" node_config.yaml
 
     sudo mv lighthouse_config.yaml /etc/nebula/config.yaml
@@ -207,18 +207,18 @@ else
 
     #Start LocalCloud agent
     #We set a public domain for the first server
-    cd $HOME/service-node
+    cd $HOME/localcloud-agent
     npm install
 
     sudo echo -e "[Unit]\nDescription=LocalCloud Agent\nWants=basic.target network-online.target nss-lookup.target time-sync.target\nAfter=basic.target network.target network-online.target" >> /etc/systemd/system/localcloud-agent.service
-    sudo echo -e "[Service]\nSyslogIdentifier=localcloud-agent\nExecStart=/usr/bin/node $HOME/service-node/index.js\nRestart=always\nEnvironment=SERVICE_NODE_DOMAIN=$1" >> /etc/systemd/system/localcloud-agent.service
+    sudo echo -e "[Service]\nSyslogIdentifier=localcloud-agent\nExecStart=/usr/bin/node $HOME/localcloud-agent/index.js\nRestart=always\nEnvironment=SERVICE_NODE_DOMAIN=$1" >> /etc/systemd/system/localcloud-agent.service
     sudo echo -e "[Install]\nWantedBy=multi-user.target" >> /etc/systemd/system/localcloud-agent.service
     sudo systemctl enable localcloud-agent.service
     sudo systemctl start localcloud-agent.service
 
 fi
 
-#Wait until service-node agent is started
+#Wait until localcloud-agent agent is started
 echo "Waiting when LocalCloud agent is online"
 
 timeout 10 bash -c 'while [[ "$(curl -s -o /dev/null -w ''%{http_code}'' localhost:5005/hey)" != "200" ]]; do sleep 1; done' || false
