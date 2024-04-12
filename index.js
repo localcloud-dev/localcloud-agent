@@ -11,26 +11,10 @@ const polka = require('polka');
 const app = polka({server});
 
 const {WebSocketServer} = require ('ws');
-//Websocket
-const wss = new WebSocketServer({ server });
-wss.on('connection', function connection(ws) {
-  ws.on('error', console.error);
+const WebSocket = require ('ws');
 
-  ws.on('message', function message(data) {
-    console.log('received: %s', data);
-  });
-
-  ws.send('something');
-});
-
-//Start journalctl monitor
-const Journalctl = require('./utils/journalctl-monitor');
-const journalctl = new Journalctl({
-  unit: ['localcloud-nebula.service', 'docker.service',/*'localcloud-agent.service'*/]
-});
-journalctl.on('event', (event) => {
-  console.log(event);
-});
+const wss = new WebSocketServer({ server }); // We start a websocket server on load balancers
+var ws_client = null;
 
 const crypto = require('crypto');
 const bcrypt = require('bcrypt');
@@ -43,6 +27,11 @@ const { execSync } = require('child_process');
 
 const { json } = require('body-parser');
 app.use(json());
+
+const Journalctl = require('./utils/journalctl-monitor');
+const journalctl = new Journalctl({
+  unit: ['localcloud-nebula.service', 'docker.service','localcloud-agent.service']
+});
 
 //Create logger
 const { createLogger, format, transports } = require('winston');
@@ -333,11 +322,56 @@ async function connect_redis() {
   const proxy = require("./routes/proxy");
   proxy.create_routes(app);
 
+  console.log(vpn_nodes[0].type);
   //ToDo: Only load balancers and build machines can have public domains
-  if (vpn_nodes.length > 0 && (vpn_nodes[0].type.includes("load_balancer") == true || vpn_nodes[0].type.indexOf("build_machine") == true)) {
+  if (JSON.parse(vpn_nodes[0].type).indexOf("load_balancer") != -1) {
     setInterval(proxy.proxy_reload, 2000);
+
+    global.logger.info('Connecting to Redis Monitoring Server');
+    //Connect to Redis Monitoring Server
+    global.redis_client_monitoring = redis_db.createClient({ url: 'redis://127.0.0.1:6378' });
+    global.redis_client_monitoring.on('error', err => console.log('Redis Monitoring Client Error', err));
+
+    while (!global.redis_client_monitoring.isOpen) {
+      await global.redis_client_monitoring.connect();
+      global.logger.info('Retrying to connect to Redis Monitoring Server');
+    }
+
+    //Start a websocket server
+    wss.on('connection', function connection(ws) {
+      ws.on('error', console.error);
+
+      ws.on('message', function message(data) {
+        console.log('received: %s', data);
+      });
+
+      ws.send('something');
+
+    });
+
+  }else{
+    //Start websocket client
+    ws_client = new WebSocket('wss://192.168.202.1.localcloud.dev'); // We start a websocket client on all non load balancer servers
+    ws_client.on('error', console.error);
+
+    ws_client.on('open', function open() {
+      ws_client.isAlive = true;
+      ws_client.send('heyyy!!! from a server');
+    });
+
+    ws_client.on('message', function message(data) {
+      console.log('received: %s', data);
+    });
   }
 
+  //Start journalctl monitor
+  journalctl.on('event', (event) => {
+    /*if (ws_client.isAlive == true){
+      ws_client.send(event.MESSAGE);
+    }*/
+    //console.log(event);
+  });
+  //End if a monitor
 
   console.log("============================================");
   console.log(await storage.get_vpn_node_by_id(global.service_node_config.server_id));

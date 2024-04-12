@@ -15,9 +15,10 @@ const nanoid = customAlphabet('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklm
 
 module.exports = function (app) {
 
-  //Add a new node to VPN
+  //Add a new node (or machine) to VPN
   //This request can be send only to localhost (for example, if you use Deploy CLI on the same server where you keep your vpn private key)
   //or from any node within VPN
+
   app.post('/vpn_node', async function (req, res) {
 
     const name = req.body.name;
@@ -30,7 +31,15 @@ module.exports = function (app) {
       return;
     }
 
-    const archive_uuid = crypto.randomUUID();
+    //You can set the token to join VPN in the body of this request
+    //If a token isn't provided, LocalCloud generates it
+    var archive_uuid = null;
+    if(req.body.join_token != undefined && req.body.join_token !=  ''){
+      archive_uuid = req.body.join_token;
+    }else{
+      archive_uuid = crypto.randomUUID();
+    }
+
     global.logger.info(`Adding new VPN node ${name}`);
 
     //Generate .crt and .key for a new node
