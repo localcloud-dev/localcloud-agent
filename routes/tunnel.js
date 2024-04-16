@@ -57,20 +57,21 @@ module.exports = function (app) {
     });
 
     app.get('/tunnel', async function (req, res) {
+        let tunnels = await storage.get_tunnels();
         res.statusCode = 200;
-        res.end(JSON.stringify(global.tunnels));
+        res.end(JSON.stringify(tunnels));
     });
 
     app.delete('/tunnel/:tunnel_id', async function (req, res) {
 
         const tunnel_id = req.params.tunnel_id;
+        let tunnels = await storage.get_tunnel_by_id(tunnel_id);
+        if (tunnels.length > 0){
+            await storage.delete_tunnel(tunnel_id);
 
-        let index = global.tunnels.find(tunnel => tunnel.id === tunnel_id);
-        global.tunnels.splice(index, 1);
-        storage.save_tunnels();
-
-        //Reload Proxy Server
-        //proxy.proxy_reload();
+            //Reload Proxy Server
+            await storage.delete_proxy(tunnels[0].domain);
+        }
 
         global.logger.info(`Tunnel: ${tunnel_id} has been removed`);
         res.statusCode = 200;
