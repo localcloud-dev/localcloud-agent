@@ -97,7 +97,8 @@ sudo DEBIAN_FRONTEND=noninteractive sudo apt -y install caddy
 cd $HOME
 
 #Clone LocalCloud agent
-git clone https://github.com/localcloud-dev/localcloud-agent.git
+git clone https://coded-sh@bitbucket.org/coded-sh/localcloud-agent.git localcloud-agent
+#git clone https://github.com/localcloud-dev/localcloud-agent.git
 
 #Get architecture
 OSArch=$(uname -m)

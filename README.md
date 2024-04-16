@@ -2,7 +2,7 @@
 
 # LocalCloud | Server Agent
 
-[LocalCloud](https://localcloud.dev) is an open source alternative to [Heroku](https://www.heroku.com/), [Render](https://render.com/), [Platform.sh](https://platform.sh/) and other proprietary PaaS. [LocalCloud](https://localcloud.dev) is even more - a multi-cloud PaaS with autoscaling, CI/CD, TLS certificates, VPN and localhost tunnels without any vendor lock-in. Deploy web and IoT projects on virtually any cloud provider/Raspberry Pi in minutes.
+[LocalCloud](https://localcloud.dev) is an open source alternative to [Heroku](https://www.heroku.com/), [Render](https://render.com/), [Platform.sh](https://platform.sh/) and other proprietary PaaS. [LocalCloud](https://localcloud.dev) is even more - a multi-cloud deployment platform with autoscaling, CI/CD, TLS certificates, VPN and localhost tunnels without any vendor lock-in. Deploy web and IoT projects on virtually any cloud provider/Raspberry Pi in minutes.
 
 More info about the project: [localcloud.dev](https://localcloud.dev)
 
@@ -21,7 +21,7 @@ LocalCloud is the API-driven platform. This means that you can do everything usi
 
 #### Secure
 
-By default LocalCloud creates VPN (virtual private network) with cloud servers (servers can be located in different data centers) and local machines (laptops, Desktop computers, even Raspberry Pis ). All requests between servers and local machines are sent over VPN. Also VPN allows to expose a local webserver via a public URL with automatic HTTPS.
+LocalCloud creates VPN (virtual private network) with cloud servers (servers can be located in different data centers) and local machines (laptops, Desktop computers, Raspberry Pis and other single-board computers ). All requests between servers and local machines are encrypted and sent over VPN that's why you don't need an additional authorization to send messages between services deployed with LocalCloud. Also VPN allows to expose a local webserver via a public URL with automatic HTTPS.
 
 
 ### Main features
@@ -41,35 +41,43 @@ By default LocalCloud creates VPN (virtual private network) with cloud servers (
 
 ### Quickstart
 
-LocalCloud uses Git to manage deployment that's why you don’t need to learn new commands or configuration files to deploy your projects. You can use a self-hosted instance of LocalCloud or our fully managed cloud platform (soon).
+LocalCloud uses Git to manage deployments that's why you don’t need to learn new commands or configuration files to deploy your projects. You can use a self-hosted instance of LocalCloud or our fully managed cloud platform (from January, 2024).
 
 #### What you need to deploy the first project:
 - A fresh (new) server (VPS, Public Cloud, Dedicated Server, etc) with public IP, SSH access, and Ubuntu 22.04. If you don't know where to get a cloud server try Hetzner, Scaleway, OVH or DigitalOcean. All these cloud providers are easier to use and much more cheap than AWS, GCP or Azure.
 - A custom domain and access to DNS records of this domain
 - Dockerfile in the project's root directory
 
-#### How to deploy a project with self-hosted LocalCloud
+#### How to deploy a web project
 
-- Add A record to DNS with the public IP address of your server. For example, if a public IP of your server is 153.111.51.139 and your custom domain is project.com, you can add a wildcard A record *.test.project.com -> 153.111.51.139. This is just an example, you should update with your real IP address and domain name.
+- Add A record to DNS with the public IP address of your server (usually it can be done on a website where you bought a domain). For example, if a public IP of your server is 153.111.51.139 and your custom domain is project.com, you can add  A record lighthouse.project.com -> 153.111.51.139. This is just an example, you should update with your real IP address and domain name.
 - SSH into your server
-- Install the LocalCloud agent on this server (replace "your_domain" with your domain, for the example in the step 1 it could be agent.test.project.com):
+```
+ssh root@ip_of_your_server
+```
+- Install the LocalCloud agent on this server (replace "your_domain" with the real domain, for the example from the step 1 it could be lighthouse.project.com):
 ```
 curl https://localcloud.dev/install | sh -s your_domain
 ```
-**your_domain** will be used for adding new servers and local machines, and handling Bitbucket, Github and other webhooks; should be without http and https, for example: agent.test.project.com or deploy.domain.com, etc
+**your_domain** will be used for adding new servers and local machines, and handling Bitbucket, Github and other webhooks; should be without http and https, for example: lighthouse.project.com or agent.domain.com, etc
 
 - Wait until the LocalCloud agent finishes the server provision and run a command on the server
 
 ```
 localcloud
 ```
-#### When the managed (cloud version) LocalCloud will be available?
+- Select "New Service/App" if you want to deploy a web project. You'll see a step by step guide how to deploy - for most projects it's just 3 simple steps.
+- Select "Servers/Local Machines" if you want to install LocalCloud CLI on a local machine (laptops, desktop computers, etc) or add a new server
 
-- November, 2023
+**Check [localcloud.dev/docs](https://localcloud.dev/docs) for the full documentation**
+
+#### When LocalCloud managed servers will be available?
+
+- May, 2024
 
 #### When the Web Console will be available?
 
-- November, 2023
+- May, 2024
 
 ### License
 
