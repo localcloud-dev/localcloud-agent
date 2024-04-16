@@ -2,9 +2,18 @@
 
 #Parameters
 #$1 - domain
+#$2 - (optional) token to join vpn, if specified a join url will be created during first server provision
+
 #or
+
 #$1 - join
 #$2 - url to download a zip archive with certificates
+
+
+#Set default value for $HOME because it doesn't exist in cloudinit
+
+DEFAULT_HOME='/root'
+HOME=${HOME:-$DEFAULT_HOME}
 
 if [ -z "$1" ]
 then
@@ -38,7 +47,7 @@ sudo ufw --force enable
 #Install Docker
 DEBIAN_FRONTEND=noninteractive sudo apt-get update
 DEBIAN_FRONTEND=noninteractive sudo apt-get install -y ca-certificates curl gnupg 
-DEBIAN_FRONTEND=noninteractive sudo install -y -m 0755 -d /etc/apt/keyrings
+sudo install -m 0755 -d /etc/apt/keyrings
 curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
 sudo chmod a+r /etc/apt/keyrings/docker.gpg
 
@@ -84,11 +93,12 @@ curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' | sudo 
 sudo apt update
 sudo DEBIAN_FRONTEND=noninteractive sudo apt -y install caddy
 
-#Clone LocalCloud agent
-git clone https://github.com/localcloud-dev/localcloud-agent.git
-
 #Install Nebula
 cd $HOME
+
+#Clone LocalCloud agent
+git clone https://coded-sh@bitbucket.org/coded-sh/localcloud-agent.git localcloud-agent
+#git clone https://github.com/localcloud-dev/localcloud-agent.git
 
 #Get architecture
 OSArch=$(uname -m)
@@ -205,6 +215,15 @@ else
     sudo systemctl enable redis-stack-server
     sudo systemctl restart redis-stack-server
 
+    #Setup and start Redis instance for logs and monitoring
+    sudo echo -e "port 6378\ndaemonize no\nloadmodule /opt/redis-stack/lib/redisearch.so\npidfile /var/run/redis/redis-server-monitoring.pid\ndbfilename dump-monitoring.rdb" >> /etc/redis-stack-monitoring.conf
+    chown nobody /etc/redis-stack-monitoring.conf
+    cp /etc/systemd/system/redis-stack-server.service /etc/systemd/system/redis-stack-server-monitoring.service
+    sed -i 's/redis-stack.conf/redis-stack-monitoring.conf/' /etc/systemd/system/redis-stack-server-monitoring.service
+
+    sudo systemctl enable redis-stack-server-monitoring
+    sudo systemctl restart redis-stack-server-monitoring
+
     #Start LocalCloud agent
     #We set a public domain for the first server
     cd $HOME/localcloud-agent
@@ -249,6 +268,16 @@ else
     #Start Docker container registry, in the current version the first server/root server is a build machine as well
     #We'll add special build nodes/machines in next version
     sudo docker container run -dt -p 7000:5000 --restart unless-stopped --name depl-registry --volume depl-registry:/var/lib/registry:Z docker.io/library/registry:2
+
+
+    #Check if a join token is specified
+    if [ -z "$2" ]
+    then
+        echo "No join token is specified, skip generating of a join URL"
+    else
+        echo "Generating a join URL to join VPN with this server"
+        curl -d '{"name":"local_machine_1", "type":"local_machine", "join_token":"'"$2"'"}' -H "Content-Type: application/json" -X POST http://localhost:5005/vpn_node
+    fi
 
     echo ""
     echo ""

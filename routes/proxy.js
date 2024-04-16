@@ -82,7 +82,7 @@ async function update_proxy_config() {
 }
 `;
 
-    //Fill services
+    //Fill services and tunnels
     let proxies = await storage.get_proxies_by_status("done");
     if (proxies.length > 0) {
         proxies.forEach((proxy) => {
@@ -93,15 +93,6 @@ ${proxy.domain} {
 `;
         });
     }
-
-    //ToDo: Fill tunnels
-    global.tunnels.forEach((tunnel, index) => {
-        caddy_file += `
-${tunnel.domain} {
-    reverse_proxy * ${tunnel.vpn_ip}:${tunnel.port}
-}
-`;
-    });
 
     fs.writeFile(caddyfile_path, caddy_file, err => {
         if (err) {

@@ -71,13 +71,14 @@ localcloud
 
 **Check [localcloud.dev/docs](https://localcloud.dev/docs) for the full documentation**
 
-#### When the managed (cloud version) LocalCloud will be available?
+#### When LocalCloud managed servers will be available?
 
-- January, 2024
+- May, 2024
 
 #### When the Web Console will be available?
 
-- January, 2024
+- May, 2024
+
 
 ### License
 
