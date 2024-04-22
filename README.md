@@ -79,7 +79,6 @@ localcloud
 
 - May, 2024
 
-
 ### License
 
 - [Server Side Public License](https://www.mongodb.com/licensing/server-side-public-license)

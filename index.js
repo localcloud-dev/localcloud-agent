@@ -328,7 +328,10 @@ async function connect_redis() {
   require("./routes/service")(app);
   require("./routes/tunnel")(app);
   require("./routes/deploy")(app);
-  require("./routes/vpn")(app);
+
+  const vpn_routes = require("./routes/vpn");
+  vpn_routes.create_routes(app);
+
   require("./routes/environment")(app);
   require("./routes/container")(app);
   require("./routes/image")(app);
@@ -344,7 +347,9 @@ async function connect_redis() {
   console.log(vpn_nodes[0].type);
   //ToDo: Only load balancers and build machines can have public domains
   if (JSON.parse(vpn_nodes[0].type).indexOf("load_balancer") != -1) {
+    
     setInterval(proxy.proxy_reload, 2000);
+    setInterval(vpn_routes.check_nodes, 2000);
 
     global.logger.info('Connecting to Redis Monitoring Server');
     //Connect to Redis Monitoring Server

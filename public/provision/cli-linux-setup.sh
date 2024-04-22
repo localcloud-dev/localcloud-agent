@@ -35,6 +35,10 @@ fi
 
 sudo chmod +x nebula
 sudo mv nebula /usr/local/bin/nebula
+
+sudo chmod +x nebula-cert
+sudo mv nebula-cert /usr/local/bin/nebula-cert
+
 sudo mkdir /etc/nebula
 
 

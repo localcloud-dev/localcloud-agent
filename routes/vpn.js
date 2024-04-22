@@ -3,6 +3,7 @@
     Methods to manage VPN
 */
 
+
 const adm_zip = require('adm-zip');
 const os = require('os');
 const home_dir = `${os.homedir()}`;
@@ -13,7 +14,7 @@ const storage = require("../utils/storage");
 const { customAlphabet } = require("nanoid");
 const nanoid = customAlphabet('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz', 11); //~117 years or 1B IDs needed, in order to have a 1% probability of at least one collision, https://zelark.github.io/nano-id-cc/
 
-module.exports = function (app) {
+async function create_routes(app)  {
 
   //Add a new node (or machine) to VPN
   //This request can be send only to localhost (for example, if you use Deploy CLI on the same server where you keep your vpn private key)
@@ -60,6 +61,8 @@ module.exports = function (app) {
     new_vpn_node.ip = `${private_ip_mask}${random_id}`;
     new_vpn_node.name = name;
     new_vpn_node.type = [type];
+    new_vpn_node.status = 0; //statuses: 0 - offline, 1 - online
+    new_vpn_node.public_ip = '';
     new_vpn_node.id = nanoid();
     while (vpn_nodes.find(vpn_node => vpn_node.id === new_vpn_node.id)) {
       new_vpn_node.id = nanoid();
@@ -128,6 +131,33 @@ module.exports = function (app) {
     });
   });
 
+  //Update a vpn node
+  app.put('/vpn_node', async function (req, res) {
+
+    const node_id = req.body.id;
+    const status = req.body.status; 
+    const public_ip = req.body.public_ip; 
+
+    let vpn_nodes = await storage.get_vpn_node_by_id(node_id);
+    if (vpn_nodes.length == 0) {
+      res.statusCode = 404;
+      res.end(JSON.stringify({ "msg": `Node not found` }));
+      return;
+    }
+
+    if (status != undefined){
+      await storage.update_vpn_node_status(node_id, status);
+    }
+
+    if (public_ip != undefined){
+      await storage.update_vpn_node_public_ip(node_id, public_ip);
+    }
+
+    res.statusCode = 200;
+    res.end('');
+
+  });
+
   //Get VPN nodes
   app.get('/vpn_node', async function (req, res) {
       //Load services from DB and simplify the output format
@@ -176,7 +206,37 @@ module.exports = function (app) {
 
 }
 
+async function check_nodes() {
+  let vpn_nodes = await storage.get_vpn_nodes();
+  vpn_nodes.forEach(async vpn_node => {
+    ping(vpn_node);
+  })
+}
+
+async function ping(vpn_node) { 
+  exec(`ping -c 1 ${vpn_node.ip}`, async function (err, stdout, stderr) {
+
+    if (stderr) {
+      console.error(`Error from ping: ${stderr}`);
+      return false;
+    }
+
+    console.log(`${stdout}`);
+
+    if (stdout.toString().includes('1 received') == true){
+      console.log("!!!! Online");
+      await storage.update_vpn_node_status(vpn_node.id, 1);
+    }else{
+      console.log("!!!! Offline");
+      await storage.update_vpn_node_status(vpn_node.id, 0);
+    }
+
+  });
+}
+
+
 function randomNumber(min, max) {
   return Math.floor(Math.random() * (max - min) + min);
 }
 
+module.exports = { create_routes, check_nodes };
