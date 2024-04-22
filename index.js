@@ -8,10 +8,10 @@ const http = require('http');
 const server = http.createServer();
 
 const polka = require('polka');
-const app = polka({server});
+const app = polka({ server });
 
-const {WebSocketServer} = require ('ws');
-const WebSocket = require ('ws');
+const { WebSocketServer } = require('ws');
+const WebSocket = require('ws');
 
 const wss = new WebSocketServer({ server }); // We start a websocket server on load balancers
 var ws_client = null;
@@ -30,7 +30,7 @@ app.use(json());
 
 const Journalctl = require('./utils/journalctl-monitor');
 const journalctl = new Journalctl({
-  unit: ['localcloud-nebula.service', 'docker.service','localcloud-agent.service']
+  unit: ['localcloud-nebula.service', 'docker.service', 'localcloud-agent.service']
 });
 
 //Create logger
@@ -347,7 +347,7 @@ async function connect_redis() {
   console.log(vpn_nodes[0].type);
   //ToDo: Only load balancers and build machines can have public domains
   if (JSON.parse(vpn_nodes[0].type).indexOf("load_balancer") != -1) {
-    
+
     setInterval(proxy.proxy_reload, 2000);
     setInterval(vpn_routes.check_nodes, 2000);
 
@@ -373,7 +373,7 @@ async function connect_redis() {
 
     });
 
-  }else{
+  } else {
     //Start websocket client
     ws_client = new WebSocket('wss://192.168.202.1.localcloud.dev'); // We start a websocket client on all non load balancer servers
     ws_client.on('error', console.error);
@@ -387,6 +387,7 @@ async function connect_redis() {
       console.log('received: %s', data);
     });
   }
+
 
   //Start journalctl monitor
   journalctl.on('event', (event) => {
@@ -412,11 +413,58 @@ async function connect_redis() {
     res.end();
   });
 
-  app.listen(global.service_node_config.port, err => {
+  app.listen(global.service_node_config.port, async err => {
     if (err) throw err;
     global.logger.info(`LocalCloud agent is running on port ${global.service_node_config.port}`);
+
+    //ToDo: Move this task to another better place, but note, that the code below should be run after the webserver is started
+    get_public_ip();
+
   });
 
+}
+
+async function get_public_ip(){
+      //Check and update a public ip address of a vpn node
+    //ToDo: Move this task to another better place, but note, that the code below should be run after the webserver is started
+    try {
+      const response = await fetch(`https://ipinfo.io/ip`, {
+        method: 'GET',
+      })
+      const public_ip = await response.text();
+      if (!response.ok) {
+        console.error('Cannot load a public IP: ', JSON.stringify(data));
+      } else {
+        console.log(`Loaded Public IP: ${public_ip}, sending PUT /vpn_node`);
+
+        try {
+          const response = await fetch(`http://192.168.202.1:5005/vpn_node`, {
+            method: 'PUT',
+            headers: {
+              'Accept': 'application/json',
+              'Content-Type': 'application/json',
+          },
+            body: JSON.stringify({
+              "id": global.service_node_config.server_id,
+              "public_ip": public_ip
+            })
+          })
+          const res_data = await response.text();
+          if (!response.ok) {
+            console.error('Cannot send PUT /vpn_node: ', JSON.stringify(res_data));
+          } else {
+            console.log('Node Public Ip has been updated');
+          }
+        } catch (error) {
+          console.error("Error:", error);
+        }
+
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      return null;
+    }
+    //////////////////////////////////////////////////////////////////////////////////
 }
 
 //ToDo: rewrite api token logic, now all requests are protected by overlay network
