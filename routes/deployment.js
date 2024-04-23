@@ -43,7 +43,7 @@ async function check_deployment_query() {
 
                 const git_url = image.git_url;
                 const environment = await storage.get_environment_by_id(image.environment_id);
-                if (environment == null){
+                if (environment == null) {
                     global.logger.error(`check_build_image: Environment with id: ${image.environment_id} not found. Stopping deployment.`);
                     return;
                 }
@@ -210,15 +210,21 @@ async function check_deployment_query() {
                 if (err == undefined || err == null) {
 
                     global.logger.info(`Container ${container.id} has been started`);
-                    request
-                                .post(`http://192.168.202.1:5005/proxy`)
-                                .send({ container_id: container.id, workload_ip: me_node.ip, port: available_port, domain: environment.domain }) // sends a JSON post body
-                                .set('accept', 'json')
-                                .retry(150)
-                                .end(function (err, res) {
-                                    // Calling the end function will send the request
-                                    console.log(`\nMessage to create a new proxy for container: ${container.id}, domain: ${environment.domain} is delivered.\n`);
-                                });
+
+                    //Send requests to update proxies for environment domains
+                    environment.domains.forEach(async (domain) => {
+
+                        request
+                            .post(`http://192.168.202.1:5005/proxy`)
+                            .send({ container_id: container.id, workload_ip: me_node.ip, port: available_port, domain: domain }) // sends a JSON post body
+                            .set('accept', 'json')
+                            .retry(150)
+                            .end(function (err, res) {
+                                // Calling the end function will send the request
+                                console.log(`\nMessage to create a new proxy for container: ${container.id}, domain: ${domain} is delivered.\n`);
+                            });
+
+                    });
                     return true;
                 } else {
                     return false;
@@ -252,12 +258,12 @@ async function check_deployment_query() {
 
                     //We should send a request to one of Redis shards to update a container's status
                     request.post(`http://192.168.202.1:5005/container/status`)
-                                .send({ container_id: container.id, status: "removed"})
-                                .set('accept', 'json')
-                                .retry(150)
-                                .end(function (err, res) {
-                                    console.log(`\nMessage to update a status of container: ${container.id} to a new status "removed" has been sent.\n`);
-                                });
+                        .send({ container_id: container.id, status: "removed" })
+                        .set('accept', 'json')
+                        .retry(150)
+                        .end(function (err, res) {
+                            console.log(`\nMessage to update a status of container: ${container.id} to a new status "removed" has been sent.\n`);
+                        });
                     return true;
                 } else {
                     return false;
@@ -277,33 +283,33 @@ async function check_deployment_query() {
             let images_to_remove = await storage.get_images_by_status("to_remove");
 
             images_to_remove.forEach(async (image) => {
-            await storage.update_image_status(image.id, "removing");
+                await storage.update_image_status(image.id, "removing");
 
-            global.logger.info(`Deleting image ${image.id} with 'docker image rm'`);
+                global.logger.info(`Deleting image ${image.id} with 'docker image rm'`);
 
-            //Delete image
-            exec(`docker image rm -f ${image.id} localhost:7000/${image.id} 192.168.202.1:7000/${image.id}`, {
-                cwd: `${homedir}`
-            }, async function (err, stdout, stderr) {
-                global.logger.info(`'docker image rm' output: ${stdout}, error output: ${stderr}`);
-                if (err == undefined || err == null) {
-                    await storage.update_image_status(container.id, "removed");
-                    global.logger.info(`Image ${image.id} has been deleted`);
+                //Delete image
+                exec(`docker image rm -f ${image.id} localhost:7000/${image.id} 192.168.202.1:7000/${image.id}`, {
+                    cwd: `${homedir}`
+                }, async function (err, stdout, stderr) {
+                    global.logger.info(`'docker image rm' output: ${stdout}, error output: ${stderr}`);
+                    if (err == undefined || err == null) {
+                        await storage.update_image_status(container.id, "removed");
+                        global.logger.info(`Image ${image.id} has been deleted`);
 
-                    //We should send a request to one of Redis shards to update a container's status
-                    request.post(`http://192.168.202.1:5005/image/status`)
-                                .send({ image_id: image.id, status: "removed"})
-                                .set('accept', 'json')
-                                .retry(150)
-                                .end(function (err, res) {
-                                    console.log(`\nMessage to update a status of image: ${image.id} to a new status "removed" has been sent.\n`);
-                                });
-                    return true;
-                } else {
-                    return false;
-                }
+                        //We should send a request to one of Redis shards to update a container's status
+                        request.post(`http://192.168.202.1:5005/image/status`)
+                            .send({ image_id: image.id, status: "removed" })
+                            .set('accept', 'json')
+                            .retry(150)
+                            .end(function (err, res) {
+                                console.log(`\nMessage to update a status of image: ${image.id} to a new status "removed" has been sent.\n`);
+                            });
+                        return true;
+                    } else {
+                        return false;
+                    }
+                });
             });
-        });
 
         }
     }

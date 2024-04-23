@@ -67,7 +67,7 @@ async function add_environment(environment){
         id: environment.id,
         name:environment.name,
         branch:environment.branch,
-        domain:environment.domain,
+        domains:JSON.stringify(environment.domains),
         port:environment.port,
         image_status:environment.image_status,
         service_id:environment.service_id,
@@ -95,6 +95,7 @@ async function get_environment_by_branch(service_id, branch){
     const environments = simplify_format(results.documents);
     if (environments.length > 0){
         let environment = environments[0];
+        environment.domains = JSON.parse(environment.domains);
         environment.servers = JSON.parse(environment.servers);
         return environment;
     }
@@ -108,7 +109,13 @@ async function get_environments_by_service_id(service_id){
         `@service_id: /${service_id}/`
     );
 
-    return simplify_format(results.documents);
+    const environments = simplify_format(results.documents);
+    if (environments.length > 0){
+        environments[0].domains = JSON.parse(environment.domains);
+        environments[0].servers = JSON.parse(environment.servers);
+    }
+
+    return environments;
 }
 
 async function get_environment_by_id(environment_id){   
@@ -119,6 +126,8 @@ async function get_environment_by_id(environment_id){
 
     const environments = simplify_format(results.documents);
     if (environments.length > 0){
+        environments[0].domains = JSON.parse(environment.domains);
+        environments[0].servers = JSON.parse(environment.servers);
         return environments[0];
     }
     return null;

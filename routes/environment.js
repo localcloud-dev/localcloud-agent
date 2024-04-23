@@ -59,8 +59,9 @@ module.exports = function (app) {
             let environment = service.environments.find(environment => environment.name === environment_name);
             if (environment != undefined) {
                 //Delete a Proxy record related to this environment
-                await proxy.delete_proxy(environment.domain);
-
+                environment.domains.forEach(async (domain) => {
+                    await proxy.delete_proxy(domain);
+                });
                 //Plan to remove all containers with environment_id == this environment id
                 //Update status of a container only if the current status != "to_remove"
                 
