@@ -111,6 +111,7 @@ async function get_environments_by_service_id(service_id){
 
     const environments = simplify_format(results.documents);
     if (environments.length > 0){
+        let environment = environments[0];
         environments[0].domains = JSON.parse(environment.domains);
         environments[0].servers = JSON.parse(environment.servers);
     }
@@ -126,6 +127,7 @@ async function get_environment_by_id(environment_id){
 
     const environments = simplify_format(results.documents);
     if (environments.length > 0){
+        let environment = environments[0];
         environments[0].domains = JSON.parse(environment.domains);
         environments[0].servers = JSON.parse(environment.servers);
         return environments[0];

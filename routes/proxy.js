@@ -8,6 +8,7 @@ const fs = require('fs');
 const homedir = require('os').homedir();
 const caddyfile_path = `${homedir}/Caddyfile`;
 const storage = require("../utils/storage");
+const dns = require('dns');
 
 async function create_routes(app) {
 
@@ -47,9 +48,20 @@ async function proxy_reload() {
         //Get Proxy records with status == "to_do"
         let proxies = await storage.get_proxies_by_status("to_do");
         if (proxies.length > 0) {
-            let proxy = proxies[0];
-            await storage.update_proxy_status(proxy.id, "done");
-            update_proxy_config();
+            proxies.forEach((proxy) => {
+
+            //Check that a proxy.domain is resolved already
+            //If not, skip for now and update during next execution
+            dns.lookup(proxy.domain, async (err, address, family) => {
+                if(err) {
+                    console.log(`Waiting while domain ${proxy.domain} is started resolving before updating the proxy config and getting TLS certificate...`);
+                    return;
+                }
+                await storage.update_proxy_status(proxy.id, "done");
+                update_proxy_config();
+
+              });
+            });
         }
     }
 }
