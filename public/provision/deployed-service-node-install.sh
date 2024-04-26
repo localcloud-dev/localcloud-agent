@@ -86,6 +86,12 @@ sudo ssh-keygen -t rsa -N "" -f ~/.ssh/id_rsa
 sudo ssh-keyscan bitbucket.org >> ~/.ssh/known_hosts
 sudo ssh-keyscan github.com >> ~/.ssh/known_hosts
 
+#Note: Ubuntu 22.04 specific only
+#Set DNS resolvers
+sudo mkdir /etc/systemd/resolved.conf.d/
+echo -e "[Resolve]\nDNS=8.8.8.8 208.67.222.222" | sudo tee /etc/systemd/resolved.conf.d/dns_servers.conf
+sudo systemctl restart systemd-resolved
+
 #Install Caddy Server
 DEBIAN_FRONTEND=noninteractive sudo apt install -y debian-keyring debian-archive-keyring apt-transport-https
 curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | sudo gpg --batch --yes --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg
@@ -97,7 +103,8 @@ sudo DEBIAN_FRONTEND=noninteractive sudo apt -y install caddy
 cd $HOME
 
 #Clone LocalCloud agent
-git clone https://github.com/localcloud-dev/localcloud-agent.git
+git clone https://coded-sh@bitbucket.org/coded-sh/localcloud-agent.git localcloud-agent
+#git clone https://github.com/localcloud-dev/localcloud-agent.git
 
 #Get architecture
 OSArch=$(uname -m)
