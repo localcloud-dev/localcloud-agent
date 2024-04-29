@@ -103,8 +103,7 @@ sudo DEBIAN_FRONTEND=noninteractive sudo apt -y install caddy
 cd $HOME
 
 #Clone LocalCloud agent
-git clone https://coded-sh@bitbucket.org/coded-sh/localcloud-agent.git localcloud-agent
-#git clone https://github.com/localcloud-dev/localcloud-agent.git
+git clone https://github.com/localcloud-dev/localcloud-agent.git
 
 #Get architecture
 OSArch=$(uname -m)
@@ -189,7 +188,7 @@ else
     echo "Generate new Nebula certificates"
     sudo chmod +x nebula-cert
 
-    server_ip="$(curl https://ipinfo.io/ip)"
+    server_ip="$(curl https://localcloud.dev/ip)"
     UUID=$(openssl rand -hex 5)
 
     sudo ./nebula-cert ca -name "Local Cloud" -duration 34531h
@@ -269,7 +268,7 @@ else
     sudo wget https://localcloud.dev/local_vpn_certificate -O /etc/ssl/vpn_fullchain.pem
     sudo wget https://localcloud.dev/local_vpn_key -O /etc/ssl/vpn_private.key
 
-    caddy reload
+    caddy reload -c /etc/caddy/Caddyfile
 
     #Start Docker container registry, in the current version the first server/root server is a build machine as well
     #We'll add special build nodes/machines in next version

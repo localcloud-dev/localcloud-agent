@@ -6,7 +6,7 @@
 const exec = require('child_process').exec;
 const fs = require('fs');
 const homedir = require('os').homedir();
-const caddyfile_path = `${homedir}/Caddyfile`;
+const caddyfile_path = `/etc/caddy/Caddyfile`;
 const storage = require("../utils/storage");
 const dns = require('dns');
 
@@ -38,11 +38,11 @@ async function delete_proxy(domain){
     update_proxy_config();
 }
 
-async function proxy_reload() {
+async function proxy_reload(is_force) {
     //We update proxy configuration file and reload it in 2 cases
-    //- there is no a configuration file yet
+    //- there is no a configuration file yet or force reload is required
     //- there are Proxy records in DB with status == "to_do"
-    if (fs.existsSync(caddyfile_path) == false) {
+    if (fs.existsSync(caddyfile_path) == false || is_force == true) {
         update_proxy_config();
     } else {
         //Get Proxy records with status == "to_do"
@@ -114,7 +114,7 @@ ${proxy.domain} {
         }
 
         //Reload Caddyfile
-        exec(`caddy reload`,{cwd: `${homedir}`}, async function (err, stdout, stderr) {
+        exec(`caddy reload -c ${caddyfile_path}`,{}, async function (err, stdout, stderr) {
             global.logger.info(`Proxy has been reloaded`);
         });
 

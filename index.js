@@ -350,6 +350,7 @@ async function connect_redis() {
   //ToDo: Only load balancers and build machines can have public domains
   if (JSON.parse(vpn_nodes[0].type).indexOf("load_balancer") != -1) {
 
+    proxy.proxy_reload(true);
     setInterval(proxy.proxy_reload, 2000);
     setInterval(vpn_routes.check_nodes, 2000);
 
@@ -430,7 +431,7 @@ async function get_public_ip(){
       //Check and update a public ip address of a vpn node
     //ToDo: Move this task to another better place, but note, that the code below should be run after the webserver is started
     try {
-      const response = await fetch(`https://ipinfo.io/ip`, {
+      const response = await fetch(`https://localcloud.dev/ip`, {
         method: 'GET',
       })
       const public_ip = await response.text();
