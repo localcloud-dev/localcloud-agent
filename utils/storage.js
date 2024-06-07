@@ -10,7 +10,8 @@ async function add_service(service){
         id: service.id,
         git_url: service.git_url,
         name: service.name,
-        full_name: service.full_name
+        full_name: service.full_name,
+        created_at: Math.round(Date.now() / 1000)
     })
 }
 
@@ -71,7 +72,8 @@ async function add_environment(environment){
         port:environment.port,
         image_status:environment.image_status,
         service_id:environment.service_id,
-        servers:JSON.stringify(environment.servers)
+        servers:JSON.stringify(environment.servers),
+        created_at: Math.round(Date.now() / 1000)
     })
 }
 
@@ -146,7 +148,8 @@ async function add_tunnel(tunnel){
         vpn_ip: tunnel.vpn_ip,
         name: tunnel.name,
         port: tunnel.port,
-        domain: tunnel.domain
+        domain: tunnel.domain,
+        created_at: Math.round(Date.now() / 1000)
     })
 }
 
@@ -193,7 +196,8 @@ async function add_vpn_node(vpn_node){
         status: vpn_node.status,
         public_ip: vpn_node.public_ip,
         name: vpn_node.name,
-        type: JSON.stringify(vpn_node.type)
+        type: JSON.stringify(vpn_node.type),
+        created_at: Math.round(Date.now() / 1000)
     })
 }
 
@@ -247,7 +251,8 @@ async function add_image(service, environment){
         service_id: service.id,
         environment_id: environment.id,
         git_url: service.git_url,
-        status: "to_do"
+        status: "to_do",
+        created_at: Math.round(Date.now() / 1000)
     })
     return image_id;
 }
@@ -305,7 +310,8 @@ async function add_container(image_id, target_server_id, environment_id){
         image_id: image_id,
         target: target_server_id,
         environment_id: environment_id,
-        status: "to_do"
+        status: "to_do",
+        created_at: Math.round(Date.now() / 1000)
     })
 }
 
@@ -371,7 +377,8 @@ async function add_proxy(vpn_ip, port, domain, container_id){
         vpn_ip: vpn_ip,
         port: port,
         domain: domain,
-        status: "to_do"
+        status: "to_do",
+        created_at: Math.round(Date.now() / 1000)
     })
 }
 
@@ -449,6 +456,13 @@ function simplify_format(documents){
     if (documents != undefined){
         documents.forEach((service) => {
             services.push(service.value);
+        });
+
+        //Sort by created_at in DESC
+        services.sort(function(a,b){
+            // Turn your strings into dates, and then subtract them
+            // to get a value that is either negative, positive, or zero.
+            return b.created_at - a.created_at;
         });
     }
     console.log(services);
