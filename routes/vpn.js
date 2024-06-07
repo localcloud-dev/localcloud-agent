@@ -61,7 +61,7 @@ async function create_routes(app)  {
     new_vpn_node.ip = `${private_ip_mask}${random_id}`;
     new_vpn_node.name = name;
     new_vpn_node.type = [type];
-    new_vpn_node.status = 0; //statuses: 0 - offline, 1 - online
+    new_vpn_node.status = 2; //statuses: 0 - offline, 1 - online, 2 - provision
     new_vpn_node.public_ip = '';
     new_vpn_node.id = nanoid();
     while (vpn_nodes.find(vpn_node => vpn_node.id === new_vpn_node.id)) {
@@ -224,11 +224,16 @@ async function ping(vpn_node) {
     console.log(`${stdout}`);
 
     if (stdout.toString().includes('1 received') == true){
-      console.log("!!!! Online");
-      await storage.update_vpn_node_status(vpn_node.id, 1);
+      //Set the machine status to "online" only if it's not "online"
+      if (vpn_node.status != 1 ){
+        await storage.update_vpn_node_status(vpn_node.id, 1);
+      }
     }else{
-      console.log("!!!! Offline");
-      await storage.update_vpn_node_status(vpn_node.id, 0);
+      //If a machine has status "provision" (status == 2)
+      //we don't update the machine status to "offline"
+      if (vpn_node.status == 1 ){
+        await storage.update_vpn_node_status(vpn_node.id, 0);
+      }
     }
 
   });

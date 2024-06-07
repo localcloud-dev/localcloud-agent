@@ -301,7 +301,7 @@ async function connect_redis() {
     new_vpn_node.name = "load_balancer_1";
     new_vpn_node.type = ["load_balancer", "build_machine", "server"];
     new_vpn_node.id = global.service_node_config.server_id; // this is the first node - we shouldn't check that id is unique here
-    new_vpn_node.status = 0; //statuses: 0 - offline, 1 - online
+    new_vpn_node.status = 2; //statuses: 0 - offline, 1 - online, 2 - provision
     new_vpn_node.public_ip = '';
     await storage.add_vpn_node(new_vpn_node);
 
