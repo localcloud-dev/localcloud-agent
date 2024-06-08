@@ -190,20 +190,18 @@ async function create_routes(app)  {
 
 
   //ToDo: Find the way how to notify all other vpn nodes about deleted node
-  app.delete('/vpn_node', async function (req, res) {
-    const name = req.body.name;
-    let vpn_nodes = storage.get_vpn_nodes();
-    if (vpn_nodes.find(node => node.name === name) != undefined) {
+  app.delete('/vpn_node/:node_id', async function (req, res) {
+    let node_id = req.params.node_id;
+    let del_result = await storage.delete_vpn_node(node_id);
+    if (del_result != true) {
       res.statusCode = 403;
-      res.end(JSON.stringify({ "msg": `The node with name ${name} not found.` }));
+      res.end(JSON.stringify({ "msg": `Cannot remove a node with id ${node_id}` }));
       return;
     }
 
-    res.statusCode = 201;
+    res.statusCode = 200;
     res.end(JSON.stringify({}));
-
   });
-
 }
 
 async function check_nodes() {
