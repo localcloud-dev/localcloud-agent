@@ -2,7 +2,7 @@
 
 # LocalCloud | Server Agent
 
-[LocalCloud](https://localcloud.dev) is an alternative to [Heroku](https://www.heroku.com/), [Render](https://render.com/), [Platform.sh](https://platform.sh/) and other proprietary PaaS. [LocalCloud](https://localcloud.dev) is even more - a multi-cloud deployment platform with autoscaling, CI/CD, TLS certificates, VPN and localhost tunnels without any vendor lock-in. Deploy web and IoT projects on virtually any cloud provider/Raspberry Pi in minutes.
+[LocalCloud](https://localcloud.dev) is an alternative to [Heroku](https://www.heroku.com/), [Render](https://render.com/), [Platform.sh](https://platform.sh/) and other proprietary PaaS. [LocalCloud](https://localcloud.dev) is even more - a multi-cloud deployment platform with autoscaling, CI/CD, TLS certificates, VPN and localhost tunnels without any vendor lock-in. Deploy web and IoT projects on virtually any cloud provider/Raspberry Pi/old laptops in minutes.
 
 More info about the project: [localcloud.dev](https://localcloud.dev)
 
@@ -56,7 +56,7 @@ ssh root@ip_of_your_server
 ```
 - Install the LocalCloud agent on this server (replace "your_domain" with the real domain, for the example from the step 1 it could be lighthouse.project.com):
 ```
-curl https://localcloud.dev/install | sh -s your_domain
+curl https://localcloud.dev/install | sh -s -- d your_domain
 ```
 **your_domain** will be used for adding new servers and local machines, and handling Bitbucket, Github and other webhooks; should be without http and https, for example: lighthouse.project.com or agent.domain.com, etc
 

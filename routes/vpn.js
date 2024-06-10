@@ -71,7 +71,7 @@ async function create_routes(app)  {
     global.logger.info(`Random private VPN IP: ${new_vpn_node.ip}`);
 
     //Note: we use id of a new node in parameter -name below because Nebula uses -name as id
-    exec(`./nebula-cert sign -ca-crt /etc/nebula/ca.crt -ca-key /etc/nebula/ca.key -name \"${new_vpn_node.id}\" -ip \"${new_vpn_node.ip}\/24" -groups "devs" && sudo ufw allow from ${new_vpn_node.ip}`, {
+    exec(`nebula-cert sign -ca-crt /etc/nebula/ca.crt -ca-key /etc/nebula/ca.key -name \"${new_vpn_node.id}\" -ip \"${new_vpn_node.ip}\/24" -groups "devs" && sudo ufw allow from ${new_vpn_node.ip}`, {
       cwd: home_dir
     }, async function (err, stdout, stderr) {
 

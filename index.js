@@ -274,7 +274,7 @@ async function connect_redis() {
   //Load data about this node from host.crt file
   var vpn_node_info = {};
   try {
-    let node_info_out = execSync('./nebula-cert print -json -path /etc/nebula/host.crt', { cwd: home_dir });
+    let node_info_out = execSync('nebula-cert print -json -path /etc/nebula/host.crt', { cwd: home_dir });
     vpn_node_info = JSON.parse(node_info_out.toString()).details;
     global.logger.info('Loaded VPN node info from crt:');
     global.logger.info(node_info_out.toString());

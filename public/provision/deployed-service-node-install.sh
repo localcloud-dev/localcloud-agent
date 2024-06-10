@@ -15,14 +15,38 @@
 DEFAULT_HOME='/root'
 HOME=${HOME:-$DEFAULT_HOME}
 
-if [ -z "$1" ]
-then
+
+url_download_vpn_certs=""
+domain=""
+token_to_generate_vpn_certs_url=""
+webhook_url=""
+
+while getopts j:d:k:h: option
+do 
+    case "${option}"
+        in
+        j)url_download_vpn_certs=${OPTARG};;
+        d)domain=${OPTARG};;
+        k)token_to_generate_vpn_certs_url=${OPTARG};;
+        h)webhook_url=${OPTARG};;
+    esac
+done
+
+if [ "$url_download_vpn_certs" = "" ] && [ "$domain" = "" ]; then
   echo ""
   echo ""
-  echo "No domain is specified in the command. Use 'curl https://localcloud.dev/install | sh -s your_domain'.  Where your_domain is, for example, localcloud.domain.com; DNS A record for this domain name should be pointed to IP address of this server. The domain will be used for adding new servers/local machines and for deployment webhooks (for example, for deploying changes after you push code to GitHub/Bitbucket). More information can be found at https://localcloud.dev/docs"
+  echo "==================================================================================="
   echo ""
+  echo "No domain and no URL to join VPN is specified in the command."
   echo ""
-  exit 0
+  echo "Use 'curl https://localcloud.dev/install | sh -d your_domain' to provision the first server in the project, where your_domain is, for example, localcloud.domain.com; DNS A record for this domain name should be pointed to IP address of this server. The domain will be used for adding new servers/local machines and for deployment webhooks (for example, for deploying changes after you push code to GitHub/Bitbucket). "
+  echo ""
+  echo "Or use 'curl https://localcloud.dev/install | sh -j url_to_join_project' to join the exiting LocalCloud project."
+  echo ""
+  echo "More information can be found at https://localcloud.dev/docs"
+  echo ""
+  echo "==================================================================================="
+  exit 1
 fi
 
 echo "Installing LocalCloud Agent ..."
@@ -103,7 +127,8 @@ sudo DEBIAN_FRONTEND=noninteractive sudo apt -y install caddy
 cd $HOME
 
 #Clone LocalCloud agent
-git clone https://github.com/localcloud-dev/localcloud-agent.git
+git clone https://coded-sh@bitbucket.org/coded-sh/localcloud-agent.git localcloud-agent
+#git clone https://github.com/localcloud-dev/localcloud-agent.git
 
 #Get architecture
 OSArch=$(uname -m)
@@ -118,20 +143,23 @@ else
 fi
 
 sudo chmod +x nebula
+sudo chmod +x nebula-cert
+
 mv nebula /usr/local/bin/nebula
+mv nebula-cert /usr/local/bin/nebula-cert
 sudo mkdir /etc/nebula
 
 #Install Redis
 curl -fsSL https://packages.redis.io/gpg | sudo gpg --dearmor -o /usr/share/keyrings/redis-archive-keyring.gpg
 echo "deb [signed-by=/usr/share/keyrings/redis-archive-keyring.gpg] https://packages.redis.io/deb $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/redis.list
 sudo apt-get update
-sudo DEBIAN_FRONTEND=noninteractive apt-get -y install redis-stack-server
+sudo DEBIAN_FRONTEND=noninteractive apt-get -y install redis-stack-server=6.2.6-v15
 
-if [ "$1" = "join" ]; then
+if [ "$url_download_vpn_certs" != "" ]; then
 
     echo "Downloading a zip archive with Nebula certificates"
     DEBIAN_FRONTEND=noninteractive  sudo apt-get install unzip
-    wget $2 -O deployed-join-vpn.zip
+    wget $url_download_vpn_certs -O deployed-join-vpn.zip
     unzip -o deployed-join-vpn.zip
     sudo mv config.yaml /etc/nebula/config.yaml
     sudo mv ca.crt /etc/nebula/ca.crt
@@ -166,7 +194,7 @@ if [ "$1" = "join" ]; then
     echo "Redis replica synchronization"
     timeout 15 bash -c 'while [[ "$(redis-cli dbsize)" == "0" ]]; do sleep 1; done' || false
     if [[ "$(redis-cli dbsize)" == "0" ]]; then
-        echo "Cannot synchronize Redis replica with the master. Try to rebuild this server, add a new node in Deploy CLI and run this script again."
+        echo "Cannot synchronize Redis replica with the master. Try to rebuild this server, add a new node in LocalCLoud CLI and run this script again."
         exit 1
     else
         echo "Redis replica has been synchronized with the master instance"
@@ -186,15 +214,14 @@ if [ "$1" = "join" ]; then
 else
 
     echo "Generate new Nebula certificates"
-    sudo chmod +x nebula-cert
 
     server_ip="$(curl https://localcloud.dev/ip)"
     UUID=$(openssl rand -hex 5)
 
-    sudo ./nebula-cert ca -name "Local Cloud" -duration 34531h
+    sudo nebula-cert ca -name "Local Cloud" -duration 34531h
 
-    sudo ./nebula-cert sign -name "$UUID" -ip "192.168.202.1/24"
-    #./nebula-cert sign -name "local_machine_1" -ip "192.168.202.2/24" -groups "devs"
+    sudo nebula-cert sign -name "$UUID" -ip "192.168.202.1/24"
+    #nebula-cert sign -name "local_machine_1" -ip "192.168.202.2/24" -groups "devs"
 
     cp localcloud-agent/public/provision/nebula_lighthouse_config.yaml lighthouse_config.yaml
     sed -i -e "s/{{lighthouse_ip}}/$server_ip/g" lighthouse_config.yaml
@@ -235,7 +262,7 @@ else
     npm install
 
     sudo echo -e "[Unit]\nDescription=LocalCloud Agent\nWants=basic.target network-online.target nss-lookup.target time-sync.target\nAfter=basic.target network.target network-online.target" >> /etc/systemd/system/localcloud-agent.service
-    sudo echo -e "[Service]\nSyslogIdentifier=localcloud-agent\nExecStart=/usr/bin/node $HOME/localcloud-agent/index.js\nRestart=always\nEnvironment=SERVICE_NODE_DOMAIN=$1" >> /etc/systemd/system/localcloud-agent.service
+    sudo echo -e "[Service]\nSyslogIdentifier=localcloud-agent\nExecStart=/usr/bin/node $HOME/localcloud-agent/index.js\nRestart=always\nEnvironment=SERVICE_NODE_DOMAIN=$domain" >> /etc/systemd/system/localcloud-agent.service
     sudo echo -e "[Install]\nWantedBy=multi-user.target" >> /etc/systemd/system/localcloud-agent.service
     sudo systemctl enable localcloud-agent.service
     sudo systemctl start localcloud-agent.service
@@ -250,7 +277,7 @@ timeout 10 bash -c 'while [[ "$(curl -s -o /dev/null -w ''%{http_code}'' localho
 #Install LocalCloud CLI
 npm install -g https://github.com/localcloud-dev/localcloud-cli
 
-if [ "$1" = "join" ]; then
+if [ "$url_download_vpn_certs" != "" ]; then
     echo ""
     echo ""
     echo "==================================================================================="
@@ -276,12 +303,11 @@ else
 
 
     #Check if a join token is specified
-    if [ -z "$2" ]
-    then
+    if [[ "$token_to_generate_vpn_certs_url" == "" ]]; then
         echo "No join token is specified, skip generating of a join URL"
     else
         echo "Generating a join URL to join VPN with this server"
-        curl -d '{"name":"local_machine_1", "type":"local_machine", "join_token":"'"$2"'"}' -H "Content-Type: application/json" -X POST http://localhost:5005/vpn_node
+        curl -d '{"name":"local_machine_1", "type":"local_machine", "join_token":"'"$token_to_generate_vpn_certs_url"'"}' -H "Content-Type: application/json" -X POST http://localhost:5005/vpn_node
     fi
 
     echo ""
@@ -301,5 +327,10 @@ else
     echo ""
 fi
 
+#Call webhook if specified in flag -h
+if [ "$webhook_url" != "" ]; then
+    vpn_info=`sudo nebula-cert print -json -path /etc/nebula/host.crt`
+    curl -d "$vpn_info" -H "Content-Type: application/json" -X POST $webhook_url
+fi
 #Reboot (optional)
 #reboot
