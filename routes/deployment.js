@@ -293,7 +293,7 @@ async function check_deployment_query() {
                 }, async function (err, stdout, stderr) {
                     global.logger.info(`'docker image rm' output: ${stdout}, error output: ${stderr}`);
                     if (err == undefined || err == null) {
-                        await storage.update_image_status(container.id, "removed");
+                        await storage.update_image_status(image.id, "removed");
                         global.logger.info(`Image ${image.id} has been deleted`);
 
                         //We should send a request to one of Redis shards to update a container's status
