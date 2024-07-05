@@ -2,7 +2,7 @@
 
 # LocalCloud | Server Agent
 
-[LocalCloud](https://localcloud.dev) is an alternative to [Heroku](https://www.heroku.com/), [Render](https://render.com/), [Platform.sh](https://platform.sh/) and other proprietary PaaS. [LocalCloud](https://localcloud.dev) is even more - a multi-cloud deployment platform with autoscaling, CI/CD, TLS certificates, VPN and localhost tunnels without any vendor lock-in. Deploy web and IoT projects on virtually any cloud provider/Raspberry Pi/old laptops in minutes.
+[LocalCloud](https://localcloud.dev) is an alternative to [Heroku](https://www.heroku.com/), [Render](https://render.com/), [Platform.sh](https://platform.sh/) and other proprietary PaaS / Serverless. [LocalCloud](https://localcloud.dev) is even more - a multi-cloud/on-premise deployment platform with autoscaling, CI/CD, automated certificate management for TLS certificates, VPN and localhost tunnels without any vendor lock-in. Deploy web and IoT projects on virtually any cloud provider/Raspberry Pi/old laptops in minutes.
 
 More info about the project: [localcloud.dev](https://localcloud.dev)
 
@@ -12,7 +12,7 @@ Contact us if you have any questions: hey[a]localcloud.dev
 
 #### Multi-cloud and Cloud-agnostic
 
-You can use LocalCloud with virtually any cloud provider. You can even deploy one app on servers from different data centers. There are just 3 conditions for a cloud server - public IP address, SSH and Ubuntu 22.04.
+You can use LocalCloud with virtually any cloud provider. You can even deploy one app on servers from different data centers. There are just 3 conditions for a cloud server - public IP address (required for at least one server inside each project), SSH and Ubuntu 22.04.
 
 #### Developer-friendly
 
@@ -28,6 +28,7 @@ LocalCloud creates VPN (virtual private network) with cloud servers (servers can
 
 - No-Ops & no infrastructure management
 - Static websites, Node.js, Golang and virually any runtime environment
+- Autoscaler on our managed plans
 - CI & CD are included
 - Exposing local webservers via a public URL with automatic HTTPS and custom domain
 - HTTPS-enabled custom domains
@@ -40,7 +41,7 @@ LocalCloud creates VPN (virtual private network) with cloud servers (servers can
 
 ### Quickstart
 
-LocalCloud uses Git to manage deployments that's why you don’t need to learn new commands or configuration files to deploy your projects. You can use a self-hosted instance of LocalCloud or our fully managed cloud platform (from January, 2024).
+LocalCloud uses Git to manage deployments that's why you don’t need to learn new commands or configuration files to deploy your projects. You can use a self-hosted instance of LocalCloud or our fully managed cloud platform.
 
 #### What you need to deploy the first project:
 - A fresh (new) server (VPS, Public Cloud, Dedicated Server, etc) with public IP, SSH access, and Ubuntu 22.04. If you don't know where to get a cloud server try Hetzner, Scaleway, OVH or DigitalOcean. All these cloud providers are easier to use and much more cheap than AWS, GCP or Azure.
@@ -56,7 +57,7 @@ ssh root@ip_of_your_server
 ```
 - Install the LocalCloud agent on this server (replace "your_domain" with the real domain, for the example from the step 1 it could be lighthouse.project.com):
 ```
-curl https://localcloud.dev/install | sh -s -- d your_domain
+curl https://localcloud.dev/install | sh -s -- -d your_domain
 ```
 **your_domain** will be used for adding new servers and local machines, and handling Bitbucket, Github and other webhooks; should be without http and https, for example: lighthouse.project.com or agent.domain.com, etc
 
