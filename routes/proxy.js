@@ -81,7 +81,24 @@ async function update_proxy_config() {
     service_node_config.port = global.service_node_config.port;
 
     //Generate Caddyfile
-    var caddy_file = `${service_node_config.domain} {
+    var caddy_file = `
+    {
+        order coraza_waf first
+    }
+    
+    ${service_node_config.domain} {
+
+    coraza_waf {
+        load_owasp_crs
+        directives \`
+            Include @coraza.conf-recommended
+            Include @crs-setup.conf.example
+            Include @owasp_crs/*.conf
+            SecRuleEngine On
+        \`
+        }
+
+
     reverse_proxy /hey localhost:${service_node_config.port}
     reverse_proxy /deploy/* localhost:${service_node_config.port}
     reverse_proxy /join_vpn/* localhost:${service_node_config.port}
@@ -89,6 +106,18 @@ async function update_proxy_config() {
 }
 
 192.168.202.1.localcloud.dev {
+
+
+    coraza_waf {
+        load_owasp_crs
+        directives \`
+            Include @coraza.conf-recommended
+            Include @crs-setup.conf.example
+            Include @owasp_crs/*.conf
+            SecRuleEngine On
+        \`
+        }
+
     reverse_proxy * localhost:5005
     tls /etc/ssl/vpn_fullchain.pem /etc/ssl/vpn_private.key
 }
@@ -100,6 +129,18 @@ async function update_proxy_config() {
         proxies.forEach((proxy) => {
             caddy_file += `
 ${proxy.domain} {
+
+
+    coraza_waf {
+        load_owasp_crs
+        directives \`
+            Include @coraza.conf-recommended
+            Include @crs-setup.conf.example
+            Include @owasp_crs/*.conf
+            SecRuleEngine On
+        \`
+        }
+        
     reverse_proxy * ${proxy.vpn_ip.split('/')[0]}:${proxy.port}
 }
 `;

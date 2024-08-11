@@ -117,11 +117,22 @@ echo -e "[Resolve]\nDNS=8.8.8.8 208.67.222.222" | sudo tee /etc/systemd/resolved
 sudo systemctl restart systemd-resolved
 
 #Install Caddy Server
-DEBIAN_FRONTEND=noninteractive sudo apt install -y debian-keyring debian-archive-keyring apt-transport-https
-curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key' | sudo gpg --batch --yes --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg
-curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt' | sudo tee /etc/apt/sources.list.d/caddy-stable.list
+sudo wget https://go.dev/dl/go1.22.6.linux-amd64.tar.gz
+rm -rf /usr/local/go && tar -C /usr/local -xzf go1.22.6.linux-amd64.tar.gz
+export PATH=$PATH:/usr/local/go/bin
+
+sudo apt install -y debian-keyring debian-archive-keyring apt-transport-https
+curl -1sLf 'https://dl.cloudsmith.io/public/caddy/xcaddy/gpg.key' | sudo gpg --dearmor -o /usr/share/keyrings/caddy-xcaddy-archive-keyring.gpg
+curl -1sLf 'https://dl.cloudsmith.io/public/caddy/xcaddy/debian.deb.txt' | sudo tee /etc/apt/sources.list.d/caddy-xcaddy.list
 sudo apt update
-sudo DEBIAN_FRONTEND=noninteractive sudo apt -y install caddy
+sudo apt install xcaddy
+
+xcaddy build --with github.com/corazawaf/coraza-caddy/v2
+sudo mv caddy /usr/bin/
+sudo groupadd --system caddy
+sudo useradd --system     --gid caddy     --create-home     --home-dir /var/lib/caddy     --shell /usr/sbin/nologin     --comment "Caddy web server"     caddy
+wget https://raw.githubusercontent.com/caddyserver/dist/master/init/caddy.service -O /etc/systemd/system/caddy.service
+mkdir /etc/caddy
 
 #Install Nebula
 cd $HOME
@@ -295,6 +306,9 @@ else
     sudo wget https://localcloud.dev/local_vpn_key -O /etc/ssl/vpn_private.key
 
     caddy reload -c /etc/caddy/Caddyfile
+
+    sudo systemctl daemon-reload
+    sudo systemctl enable --now caddy
 
     #Start Docker container registry, in the current version the first server/root server is a build machine as well
     #We'll add special build nodes/machines in next version
