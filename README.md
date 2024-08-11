@@ -71,14 +71,6 @@ localcloud
 
 **Check [localcloud.dev/docs](https://localcloud.dev/docs) for the full documentation**
 
-#### When LocalCloud managed servers will be available?
-
-- June, 2024
-
-#### When the Web Console will be available?
-
-- June, 2024
-
 ### License
 
 - [Server Side Public License](https://www.mongodb.com/licensing/server-side-public-license)
