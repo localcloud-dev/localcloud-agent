@@ -2,7 +2,7 @@
 
 # LocalCloud | Server Agent
 
-[LocalCloud](https://localcloud.dev) is an security-first alternative to [Heroku](https://www.heroku.com/), [Render](https://render.com/), [Platform.sh](https://platform.sh/) and other proprietary PaaS / Serverless with no vendor lock-in. [LocalCloud](https://localcloud.dev) is even more - a multi-cloud/on-premise deployment platform with WAF, rate limiting, VPN between machines from different locations, autoscaling, CI/CD, automated certificate management for TLS certificates, and localhost tunnels without any vendor lock-in. Deploy web, AI and IoT projects on virtually any cloud provider/Raspberry Pi/old laptops in minutes.
+[LocalCloud](https://localcloud.dev) is a security-first alternative to [Heroku](https://www.heroku.com/), [Render](https://render.com/), [Platform.sh](https://platform.sh/) and other proprietary PaaS / Serverless with no vendor lock-in. [LocalCloud](https://localcloud.dev) is even more - a multi-cloud/on-premise deployment platform with WAF, rate limiting, VPN between machines from different locations, autoscaling, CI/CD, automated certificate management for TLS certificates, and localhost tunnels without any vendor lock-in. Deploy web, AI and IoT projects on virtually any cloud provider/Raspberry Pi/old laptops in minutes.
 
 More info about the project: [localcloud.dev](https://localcloud.dev)
 
