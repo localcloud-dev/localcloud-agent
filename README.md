@@ -2,7 +2,7 @@
 
 # LocalCloud | Server Agent
 
-[LocalCloud](https://localcloud.dev) is an alternative to [Heroku](https://www.heroku.com/), [Render](https://render.com/), [Platform.sh](https://platform.sh/) and other proprietary PaaS / Serverless. [LocalCloud](https://localcloud.dev) is even more - a multi-cloud/on-premise deployment platform with autoscaling, CI/CD, automated certificate management for TLS certificates, VPN and localhost tunnels without any vendor lock-in. Deploy web and IoT projects on virtually any cloud provider/Raspberry Pi/old laptops in minutes.
+[LocalCloud](https://localcloud.dev) is a security-first alternative to [Heroku](https://www.heroku.com/), [Render](https://render.com/), [Platform.sh](https://platform.sh/) and other proprietary PaaS / Serverless with no vendor lock-in. [LocalCloud](https://localcloud.dev) is even more - a multi-cloud/on-premise deployment platform with WAF, rate limiting, VPN between machines from different locations, autoscaling, CI/CD, automated certificate management for TLS certificates, and localhost tunnels without any vendor lock-in. Deploy web, AI and IoT projects on virtually any cloud provider/Raspberry Pi/old laptops in minutes.
 
 More info about the project: [localcloud.dev](https://localcloud.dev)
 
@@ -27,14 +27,18 @@ LocalCloud creates VPN (virtual private network) with cloud servers (servers can
 ### Main features
 
 - No-Ops & no infrastructure management
+- WAF with a set of generic attack detection rules recommended by OWASP
+- Rate limiting (experimental)
+- VPN or VPC between different data centers, local machines and on-premise servers
 - Static websites, Node.js, Golang and virually any runtime environment
+- Load Balancer and Proxy Server
 - Autoscaler on our managed plans
-- CI & CD are included
-- Exposing local webservers via a public URL with automatic HTTPS and custom domain
-- HTTPS-enabled custom domains
-- Works with virtually any VPS / cloud / dedicated server with Ubuntu 22.04 LTS so you can select any cloud provider
+- CI & CD
+- Localhost Tunnels: expose local webservers via a public URL with automatic HTTPS and custom domain
+- HTTPS-enabled and WSS-enabled custom domains
+- Works with virtually any VPS / cloud / dedicated server / Single Board Computer with Ubuntu 22.04 LTS so you can select any cloud provider
 - Unlimited environments for each project
-- Custom domain for each environment
+- Custom domains for each environment
 - GitOps or Push-to-Deploy
 - SSH access to servers
 - Resource usage monitoring
@@ -70,14 +74,6 @@ localcloud
 - Select "Servers/Local Machines" if you want to install LocalCloud CLI on a local machine (laptops, desktop computers, etc) or add a new server
 
 **Check [localcloud.dev/docs](https://localcloud.dev/docs) for the full documentation**
-
-#### When LocalCloud managed servers will be available?
-
-- June, 2024
-
-#### When the Web Console will be available?
-
-- June, 2024
 
 ### License
 
