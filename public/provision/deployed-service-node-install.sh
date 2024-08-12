@@ -127,7 +127,7 @@ curl -1sLf 'https://dl.cloudsmith.io/public/caddy/xcaddy/debian.deb.txt' | sudo 
 sudo apt update
 sudo apt install xcaddy
 
-xcaddy build --with github.com/corazawaf/coraza-caddy/v2
+xcaddy build --with github.com/corazawaf/coraza-caddy/v2 --with github.com/mholt/caddy-ratelimit
 sudo mv caddy /usr/bin/
 sudo groupadd --system caddy
 sudo useradd --system     --gid caddy     --create-home     --home-dir /var/lib/caddy     --shell /usr/sbin/nologin     --comment "Caddy web server"     caddy
@@ -138,8 +138,7 @@ mkdir /etc/caddy
 cd $HOME
 
 #Clone LocalCloud agent
-git clone https://coded-sh@bitbucket.org/coded-sh/localcloud-agent.git localcloud-agent
-#git clone https://github.com/localcloud-dev/localcloud-agent.git
+git clone https://github.com/localcloud-dev/localcloud-agent.git
 
 #Get architecture
 OSArch=$(uname -m)

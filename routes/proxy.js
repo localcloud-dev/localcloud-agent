@@ -5,7 +5,6 @@
 
 const exec = require('child_process').exec;
 const fs = require('fs');
-const homedir = require('os').homedir();
 const caddyfile_path = `/etc/caddy/Caddyfile`;
 const storage = require("../utils/storage");
 const dns = require('dns');
@@ -140,7 +139,7 @@ ${proxy.domain} {
             SecRuleEngine On
         \`
         }
-        
+
     reverse_proxy * ${proxy.vpn_ip.split('/')[0]}:${proxy.port}
 }
 `;
