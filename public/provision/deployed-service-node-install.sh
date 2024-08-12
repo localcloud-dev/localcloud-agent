@@ -138,7 +138,8 @@ mkdir /etc/caddy
 cd $HOME
 
 #Clone LocalCloud agent
-git clone https://github.com/localcloud-dev/localcloud-agent.git
+git clone https://coded-sh@bitbucket.org/coded-sh/localcloud-agent.git localcloud-agent
+#git clone https://github.com/localcloud-dev/localcloud-agent.git
 
 #Get architecture
 OSArch=$(uname -m)
@@ -316,7 +317,7 @@ else
 
 
     #Check if a join token is specified
-    if [[ "$token_to_generate_vpn_certs_url" == "" ]]; then
+    if [ "$token_to_generate_vpn_certs_url" = "" ]; then
         echo "No join token is specified, skip generating of a join URL"
     else
         echo "Generating a join URL to join VPN with this server"
