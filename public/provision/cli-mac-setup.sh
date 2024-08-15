@@ -47,6 +47,7 @@ if [ "$1" = "join" ]; then
     #Start Nebula with launchd
     sudo rm /Library/LaunchDaemons/com.localcloud.nebula.plist
     sudo curl https://raw.githubusercontent.com/localcloud-dev/localcloud-agent/main/public/provision/launchd_nebula_template.plist -L -o /Library/LaunchDaemons/com.localcloud.nebula.plist
+    sudo launchctl unload /Library/LaunchDaemons/com.localcloud.nebula.plist
     sudo launchctl load /Library/LaunchDaemons/com.localcloud.nebula.plist
 
 fi
