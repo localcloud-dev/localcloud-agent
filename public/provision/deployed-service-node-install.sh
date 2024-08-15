@@ -1,15 +1,5 @@
 #!/bin/sh
 
-#Parameters
-#$1 - domain
-#$2 - (optional) token to join vpn, if specified a join url will be created during first server provision
-
-#or
-
-#$1 - join
-#$2 - url to download a zip archive with certificates
-
-
 #Set default value for $HOME because it doesn't exist in cloudinit
 
 DEFAULT_HOME='/root'
@@ -39,9 +29,9 @@ if [ "$url_download_vpn_certs" = "" ] && [ "$domain" = "" ]; then
   echo ""
   echo "No domain and no URL to join VPN is specified in the command."
   echo ""
-  echo "Use 'curl https://localcloud.dev/install | sh -d your_domain' to provision the first server in the project, where your_domain is, for example, localcloud.domain.com; DNS A record for this domain name should be pointed to IP address of this server. The domain will be used for adding new servers/local machines and for deployment webhooks (for example, for deploying changes after you push code to GitHub/Bitbucket). "
+  echo "Use 'curl https://localcloud.dev/install | sh -s -- -d your_domain' to provision the first server in the project, where your_domain is, for example, localcloud.domain.com; DNS A record for this domain name should be pointed to IP address of this server. The domain will be used for adding new servers/local machines and for deployment webhooks (for example, for deploying changes after you push code to GitHub/Bitbucket). "
   echo ""
-  echo "Or use 'curl https://localcloud.dev/install | sh -j url_to_join_project' to join the exiting LocalCloud project."
+  echo "Or use 'curl https://localcloud.dev/install | sh -s -- -j url_to_join_project' to join the exiting LocalCloud project."
   echo ""
   echo "More information can be found at https://localcloud.dev/docs"
   echo ""
@@ -292,7 +282,13 @@ if [ "$url_download_vpn_certs" != "" ]; then
     echo ""
     echo "==================================================================================="
     echo ""
-    echo "LocalCloud agent is installed. Use CLI on the first server to deploy services and apps on this server. "
+    echo ""
+    echo "LocalCloud agent is installed. Use LocalCloud CLI to manage servers, local machines, services, apps, deployments and localhost tunnels. Check localcloud.dev/docs/cli for more information."
+    echo ""
+    echo "To run LocalCloud CLI:"
+    echo ""
+    echo "      localcloud"
+    echo ""
     echo ""
     echo "==================================================================================="
     echo ""
